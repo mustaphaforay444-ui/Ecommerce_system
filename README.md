@@ -25,6 +25,12 @@ returning id, email, role, admin_username;
 
 Confirm exactly one expected account is returned. Do not add an admin registration form to the public site.
 
+## Customer accounts and checkout
+
+Customer accounts use Supabase Auth; the database trigger creates each profile from the authenticated user metadata. Password reset links return to the login page, where customers set a new password. The storefront provides a Supabase sign-out action for signed-in customers.
+
+Cart contents are stored in `cart_items` for the authenticated user. Checkout calls the `place_order` database function, which locks and validates those cart rows, checks current product stock and prices, creates the order and line items, decrements stock, and clears the cart in one transaction. A second checkout request after the first commits cannot create a duplicate order from the cleared cart.
+
 ## Payment status
 
 Checkout creates an order with `payment_status = 'unpaid'`. No payment gateway is configured in this project, so the app does not claim a payment succeeded. The sales report only counts payments that have a provider-verified `verified_at` value and `paid` status.
