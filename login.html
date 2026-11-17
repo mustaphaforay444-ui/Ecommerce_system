@@ -384,8 +384,6 @@
             <!-- Signup Form -->
             <div class="auth-form form-hidden" id="signupForm">
                 <h2>Create Account</h2>
-                <div class="success-message" id="signupSuccessMessage">Account created! Logging in...</div>
-
                 <div class="form-group">
                     <label for="signupName">Full Name</label>
                     <input type="text" id="signupName" placeholder="John Doe" required>
@@ -577,12 +575,20 @@
                     const result = await window.bookStore.signUp({ name, email, phone, password });
                     if (result.session) {
                         await window.bookStore.currentProfile();
-                        document.getElementById('signupSuccessMessage').textContent = 'Account created successfully.';
-                        document.getElementById('signupSuccessMessage').style.display = 'block';
-                        setTimeout(() => { window.location.href = destinationAfterAuth(); }, 900);
+                        try { await window.bookStore.signOut(); } catch { /* Continue to the login form even if session cleanup is delayed. */ }
+                        document.getElementById('loginEmail').value = email;
+                        document.getElementById('signupPassword').value = '';
+                        document.getElementById('signupConfirmPassword').value = '';
+                        toggleForms();
+                        document.getElementById('successMessage').textContent = 'Your account is ready. Please log in.';
+                        document.getElementById('successMessage').style.display = 'block';
                     } else {
-                        document.getElementById('signupSuccessMessage').textContent = 'Account created. Check your email to confirm your account before signing in.';
-                        document.getElementById('signupSuccessMessage').style.display = 'block';
+                        document.getElementById('loginEmail').value = email;
+                        document.getElementById('signupPassword').value = '';
+                        document.getElementById('signupConfirmPassword').value = '';
+                        toggleForms();
+                        document.getElementById('successMessage').textContent = 'Account created. Check your email to confirm it, then log in.';
+                        document.getElementById('successMessage').style.display = 'block';
                     }
                 } catch (error) {
                     document.getElementById('signupConfirmPasswordError').textContent = error.message || 'Unable to create the account.';
