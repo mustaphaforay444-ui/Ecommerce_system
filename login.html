@@ -588,6 +588,10 @@
         // Check the actual Supabase session instead of trusting browser-saved login flags.
         window.addEventListener('load', async () => {
             if (window.location.hash === '#signup') toggleForms();
+            if (new URLSearchParams(window.location.search).get('reset') === '1') {
+                document.getElementById('forgotPasswordPanel').style.display = 'block';
+                document.getElementById('forgotEmail').focus();
+            }
             const recoveryHash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
             const recoveryType = recoveryHash.get('type') || new URLSearchParams(window.location.search).get('type');
             if (recoveryType === 'recovery') {
