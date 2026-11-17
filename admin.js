@@ -4,6 +4,7 @@ let orders = [];
 let buyers = [];
 let editingId = null;
 let editingCategoryId = null;
+let adminOrdersChannel = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('categoryName')?.addEventListener('input', event => {
@@ -13,9 +14,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         await window.supabaseReady;
         await window.bookStore.currentProfile();
+        subscribeToAdminOrderUpdates(await window.supabaseReady);
         await Promise.all([loadDashboard(), populateCategories(), loadCategoriesTable(), loadBooksTable(), loadOrdersTable(), loadBuyersTable()]);
     } catch (error) { showPageError(error.message || 'Admin data could not be loaded.'); }
 });
+
+function subscribeToAdminOrderUpdates(client) {
+    if (adminOrdersChannel) return;
+    adminOrdersChannel = client.channel('admin-order-updates')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, async () => {
+            try { await Promise.all([loadOrdersTable(), loadDashboard()]); }
+            catch (error) { showPageError(error.message || 'Live order updates could not be loaded.'); }
+        })
+        .subscribe(status => {
+            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                showPageError('Live order updates are unavailable. Refresh the page to check for changes.');
+            }
+        });
+}
 
 function showPageError(message) {
     let banner = document.getElementById('adminDataError');
