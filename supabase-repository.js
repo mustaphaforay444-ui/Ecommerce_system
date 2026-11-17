@@ -201,6 +201,18 @@ window.bookStore = {
     return unwrap(await client.auth.setSession({ access_token: result.session.access_token, refresh_token: result.session.refresh_token }));
   },
 
+  async getSellerApplications() {
+    const client = await db();
+    return unwrap(await client.from('profiles')
+      .select('id, email, full_name, phone, seller_status, created_at, seller_reviewed_at')
+      .eq('role', 'seller').order('created_at', { ascending: false }));
+  },
+
+  async reviewSellerApplication(sellerId, decision) {
+    const client = await db();
+    return unwrap(await client.rpc('review_seller_application', { p_seller_id: sellerId, p_decision: decision }));
+  },
+
   async signInAdmin(identifier, password) {
     const client = await db();
     const response = await fetch('/api/admin/login', {
@@ -223,6 +235,15 @@ window.bookStore = {
       email,
       password,
       options: { data: { full_name: name, phone } }
+    }));
+  },
+
+  async signUpSeller({ name, email, phone, password }) {
+    const client = await db();
+    return unwrap(await client.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name, phone, account_type: 'seller' } }
     }));
   },
 
@@ -256,7 +277,7 @@ window.bookStore = {
     if (profile?.role === role) return profile;
     const client = await db();
     await client.auth.signOut();
-    const path = profile?.role === 'admin' ? 'admin-login.html' : profile?.role === 'seller' ? 'seller-login.html' : 'login.html';
+    const path = profile?.role === 'admin' ? 'admin-login.html' : profile?.role === 'seller' || role === 'seller' ? 'seller-login.html' : 'login.html';
     window.location.replace(path);
     return null;
   },

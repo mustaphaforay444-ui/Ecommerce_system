@@ -2,18 +2,50 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Seller Account - Reader’s Corner</title>
+  <title>Seller Portal - Reader’s Corner</title>
   <script type="module" src="supabase-client.js"></script><script type="module" src="supabase-repository.js"></script>
-  <style>
-    *{box-sizing:border-box}body{margin:0;background:#f3f7fb;color:#18324b;font:16px Arial,sans-serif}.top{background:#0b3f87;color:white;padding:18px max(20px,calc((100% - 900px)/2));display:flex;justify-content:space-between;align-items:center;gap:16px}.top a{color:white}main{width:min(100% - 32px,760px);margin:36px auto}.panel{padding:26px;background:white;border-radius:12px;box-shadow:0 6px 22px #1232}form{display:grid;gap:15px}label{display:grid;gap:7px;font-weight:700}input{padding:12px;border:1px solid #b8c7d6;border-radius:7px;font:inherit}button{padding:12px 18px;border:0;border-radius:7px;background:#087fbd;color:white;font-weight:700;cursor:pointer}button:disabled{opacity:.65}.notice{min-height:24px;color:#536778}
-  </style>
+  <link rel="stylesheet" href="seller.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
 </head>
-<body><header class="top"><strong>Reader’s Corner · Seller Account</strong><button id="signOut" type="button">Sign out</button></header>
-<main><h1>My seller account</h1><p class="notice" id="notice" role="status">Checking your account…</p>
-  <section class="panel"><form id="profileForm">
-    <label>Full name<input id="fullName" maxlength="120" required></label>
-    <label>Email<input id="email" type="email" readonly></label>
-    <label>Phone<input id="phone" type="tel" maxlength="40"></label>
-    <button id="save" type="submit">Save my details</button>
-  </form></section>
-</main><script src="seller.js" defer></script></body></html>
+<body class="seller-auth-checking">
+  <div class="seller-layout">
+    <aside class="seller-sidebar" id="sellerSidebar" aria-label="Seller portal navigation">
+      <a class="seller-brand" href="index.html"><i class="fas fa-book-open"></i><span>Reader’s Corner</span></a>
+      <p class="seller-caption">SELLER PORTAL</p>
+      <nav class="seller-nav">
+        <button class="seller-nav-item active" type="button" data-view="dashboard"><i class="fas fa-chart-line"></i> Dashboard</button>
+        <button class="seller-nav-item" type="button" data-view="account"><i class="fas fa-user"></i> My Account</button>
+        <button class="seller-nav-item seller-signout" id="signOut" type="button"><i class="fas fa-right-from-bracket"></i> Sign Out</button>
+      </nav>
+      <a class="seller-back-link" href="index.html">Back to bookstore</a>
+    </aside>
+    <button class="seller-backdrop" id="sellerBackdrop" type="button" aria-label="Close navigation"></button>
+    <main class="seller-main">
+      <header class="seller-topbar">
+        <button class="seller-menu-toggle" id="sellerMenuToggle" type="button" aria-label="Open seller menu" aria-controls="sellerSidebar" aria-expanded="false"><i class="fas fa-bars"></i></button>
+        <div><p class="seller-top-kicker">SELLER ACCOUNT</p><h1 id="sellerHeading">Dashboard</h1></div>
+        <span class="seller-approved-badge"><i class="fas fa-circle-check"></i> Approved seller</span>
+      </header>
+      <p id="sellerNotice" class="seller-notice" role="status">Checking your account…</p>
+      <section class="seller-view active" id="sellerView-dashboard">
+        <div class="seller-welcome-card"><div><p class="seller-eyebrow">YOUR PORTAL</p><h2 id="sellerWelcome">Welcome</h2><p>Your seller account is approved and active.</p></div><i class="fas fa-store seller-welcome-icon" aria-hidden="true"></i></div>
+        <div class="seller-dashboard-grid">
+          <article class="seller-info-card"><i class="fas fa-user-shield"></i><h2>Private account</h2><p>Your account details are visible only to you and authorized administrators.</p></article>
+          <article class="seller-info-card"><i class="fas fa-clipboard-check"></i><h2>Application status</h2><p class="seller-status-text">Approved</p><p>Your access was approved by the bookstore administrator.</p></article>
+        </div>
+        <button class="seller-primary-button" type="button" data-open-view="account">Review my account details</button>
+      </section>
+      <section class="seller-view" id="sellerView-account">
+        <div class="seller-section-heading"><p class="seller-eyebrow">YOUR DETAILS</p><h2>My Account</h2><p>Only your name and phone number can be changed here.</p></div>
+        <form id="sellerProfileForm" class="seller-profile-card">
+          <label>Full name<input id="sellerName" required maxlength="120" autocomplete="name"></label>
+          <label>Email address<input id="sellerEmail" type="email" readonly></label>
+          <label>Phone number<input id="sellerPhone" type="tel" maxlength="40" autocomplete="tel"></label>
+          <button id="saveSellerProfile" class="seller-primary-button" type="submit">Save my details</button>
+        </form>
+      </section>
+    </main>
+  </div>
+  <script src="seller.js" defer></script>
+</body>
+</html>

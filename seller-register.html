@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Seller Application - Reader’s Corner</title>
+  <script type="module" src="supabase-client.js"></script><script type="module" src="supabase-repository.js"></script>
+  <style>
+    *{box-sizing:border-box}body{min-height:100vh;margin:0;padding:20px;display:grid;place-items:center;background:linear-gradient(135deg,#0752a0,#00a6df);font:16px Arial,sans-serif;color:#243447}.card{width:min(100%,500px);padding:32px;border-radius:16px;background:white;box-shadow:0 18px 48px #001f4a3d}h1{margin:0 0 8px}p{line-height:1.5;color:#5b6875}form{display:grid;gap:14px}label{display:grid;gap:7px;font-weight:700}input{width:100%;padding:12px;border:1px solid #cbd5df;border-radius:8px;font:inherit}.password{display:flex;gap:8px}.password input{flex:1}.password button{padding:0 12px;border:1px solid #b8c7d6;border-radius:8px;background:#eef7fc;color:#17456b}.submit{width:100%;padding:13px;border:0;border-radius:8px;background:#087fbd;color:white;font:inherit;font-weight:700;cursor:pointer}.submit:disabled{opacity:.6;cursor:wait}.notice{min-height:24px;color:#17456b}.notice.error{color:#b42318}a{color:#087fbd}
+  </style>
+</head>
+<body><main class="card">
+  <h1>Apply for a seller account</h1>
+  <p>Seller applications are reviewed by the bookstore administrator. You can sign in to the seller portal only after approval.</p>
+  <p class="notice" id="setupNotice" role="status">Checking seller registration…</p>
+  <form id="sellerRegistrationForm" hidden>
+    <label for="name">Full name</label><input id="name" maxlength="120" autocomplete="name" required>
+    <label for="email">Email</label><input id="email" type="email" maxlength="254" autocomplete="email" required>
+    <label for="phone">Phone number</label><input id="phone" type="tel" maxlength="40" autocomplete="tel">
+    <label for="password">Password</label><div class="password"><input id="password" type="password" minlength="8" autocomplete="new-password" required><button type="button" data-password-toggle="password" aria-label="Show password" aria-pressed="false">Show</button></div>
+    <label for="confirmPassword">Confirm password</label><div class="password"><input id="confirmPassword" type="password" minlength="8" autocomplete="new-password" required><button type="button" data-password-toggle="confirmPassword" aria-label="Show password" aria-pressed="false">Show</button></div>
+    <button class="submit" type="submit">Submit seller application</button>
+  </form>
+  <p><a href="seller-login.html">Seller sign in</a> · <a href="index.html">Back to bookstore</a></p>
+</main>
+<script>
+  const setupNotice = document.getElementById('setupNotice');
+  const form = document.getElementById('sellerRegistrationForm');
+  fetch('/api/seller/registration-status', { headers: { Accept: 'application/json' } })
+    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+    .then(async ({ ok, data }) => {
+      if (!ok || !data.available) { setupNotice.textContent = data.error || 'Seller applications are temporarily unavailable.'; setupNotice.classList.add('error'); return; }
+      await window.supabaseReady;
+      setupNotice.textContent = 'Your application will be reviewed by an administrator.'; form.hidden = false;
+    })
+    .catch(() => { setupNotice.textContent = 'Seller registration could not be checked. Please try again later.'; setupNotice.classList.add('error'); });
+
+  document.querySelectorAll('[data-password-toggle]').forEach(button => button.addEventListener('click', () => {
+    const input = document.getElementById(button.dataset.passwordToggle); const show = input.type === 'password'; input.type = show ? 'text' : 'password';
+    button.textContent = show ? 'Hide' : 'Show'; button.setAttribute('aria-label', show ? 'Hide password' : 'Show password'); button.setAttribute('aria-pressed', String(show));
+  }));
+  form.addEventListener('submit', async event => {
+    event.preventDefault(); const button = form.querySelector('.submit'); button.disabled = true; setupNotice.classList.remove('error');
+    const password = document.getElementById('password').value;
+    if (password !== document.getElementById('confirmPassword').value) { setupNotice.textContent = 'Passwords do not match.'; setupNotice.classList.add('error'); button.disabled = false; return; }
+    try {
+      const result = await window.bookStore.signUpSeller({ name: document.getElementById('name').value.trim(), email: document.getElementById('email').value.trim(), phone: document.getElementById('phone').value.trim(), password });
+      if (result.session) await window.bookStore.signOut();
+      form.hidden = true;
+      setupNotice.textContent = result.session
+        ? 'Application submitted and waiting for admin approval. Sign in to the seller portal after the admin approves it.'
+        : 'Application submitted. Check your email to confirm your account. Seller sign-in will be available after email confirmation and admin approval.';
+    } catch (error) { setupNotice.textContent = error.message || 'We could not submit your application.'; setupNotice.classList.add('error'); button.disabled = false; }
+  });
+</script></body></html>

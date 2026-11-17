@@ -7,6 +7,7 @@ let editingCategoryId = null;
 let editingCategoryIsActive = true;
 let adminOrdersChannel = null;
 let adminMessagesChannel = null;
+let sellerApplications = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('categoryName')?.addEventListener('input', event => {
@@ -17,12 +18,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('ordersStatusFilter')?.addEventListener('change', renderOrdersTable);
     document.getElementById('messageCustomerSelect')?.addEventListener('change', loadAdminMessages);
     document.getElementById('adminMessageForm')?.addEventListener('submit', sendAdminMessage);
+    document.getElementById('sellerStatusFilter')?.addEventListener('change', renderSellerApplications);
     try {
         await window.supabaseReady;
         await window.bookStore.currentProfile();
         subscribeToAdminOrderUpdates(await window.supabaseReady);
         subscribeToAdminMessageUpdates(await window.supabaseReady);
-        await Promise.all([loadDashboard(), populateCategories(), loadCategoriesTable(), loadBooksTable(), loadOrdersTable(), loadBuyersTable()]);
+        await Promise.all([loadDashboard(), populateCategories(), loadCategoriesTable(), loadBooksTable(), loadOrdersTable(), loadBuyersTable(), loadSellerApplications()]);
     } catch (error) { showPageError(error.message || 'Admin data could not be loaded.'); }
 });
 
@@ -57,7 +59,7 @@ function clearError() { document.getElementById('adminDataError')?.remove(); }
 
 async function refreshAdminData() {
     clearError();
-    try { await Promise.all([loadDashboard(), populateCategories(), loadCategoriesTable(), loadBooksTable(), loadOrdersTable(), loadBuyersTable()]); }
+    try { await Promise.all([loadDashboard(), populateCategories(), loadCategoriesTable(), loadBooksTable(), loadOrdersTable(), loadBuyersTable(), loadSellerApplications()]); }
     catch (error) { showPageError(error.message || 'Unable to load current database records.'); }
 }
 
@@ -69,6 +71,7 @@ function showSection(sectionId, navEl) {
     if (sectionId === 'products') loadBooksTable();
     if (sectionId === 'orders') loadOrdersTable();
     if (sectionId === 'buyers') loadBuyersTable();
+    if (sectionId === 'sellers') loadSellerApplications();
     if (sectionId === 'messages') loadMessageCustomers();
     if (sectionId === 'sales') loadSalesReport();
     if (sectionId === 'reviews') loadReviewsTable();
@@ -311,6 +314,70 @@ async function loadBuyersTable() {
     });
 }
 window.loadBuyersTable = loadBuyersTable;
+
+async function loadSellerApplications() {
+    const tbody = document.getElementById('sellerApplicationsTableBody');
+    if (!tbody) return;
+    tbody.replaceChildren();
+    const loading = document.createElement('tr'); loading.innerHTML = '<td colspan="6">Loading seller applications…</td>'; tbody.appendChild(loading);
+    try {
+        sellerApplications = await window.bookStore.getSellerApplications();
+        const pendingCount = sellerApplications.filter(item => item.seller_status === 'pending').length;
+        const badge = document.getElementById('sellerPendingCount');
+        if (badge) { badge.textContent = String(pendingCount); badge.hidden = pendingCount === 0; }
+        renderSellerApplications();
+    } catch (error) {
+        const row = document.createElement('tr'); const cell = document.createElement('td'); cell.colSpan = 6;
+        cell.textContent = 'Seller screening is unavailable. Apply the latest seller screening SQL migration, then reload this page.';
+        row.appendChild(cell); tbody.replaceChildren(row);
+        if (error) console.warn('Seller screening could not be loaded.');
+    }
+}
+
+function renderSellerApplications() {
+    const tbody = document.getElementById('sellerApplicationsTableBody'); if (!tbody) return;
+    const filter = document.getElementById('sellerStatusFilter')?.value || 'pending';
+    const applications = sellerApplications.filter(item => filter === 'all' || item.seller_status === filter);
+    tbody.replaceChildren();
+    if (!applications.length) {
+        const row = document.createElement('tr'); const cell = document.createElement('td'); cell.colSpan = 6;
+        cell.textContent = filter === 'pending' ? 'No seller applications are waiting for review.' : 'No applications in this group.';
+        row.appendChild(cell); tbody.appendChild(row); return;
+    }
+    applications.forEach(application => {
+        const row = document.createElement('tr');
+        const values = [application.full_name || 'Seller applicant', application.email || '', application.phone || '—', new Date(application.created_at).toLocaleString()];
+        values.forEach(value => { const cell = document.createElement('td'); cell.textContent = value; row.appendChild(cell); });
+        const statusCell = document.createElement('td'); const status = document.createElement('span');
+        status.className = `seller-status-pill seller-status-${application.seller_status}`; status.textContent = application.seller_status;
+        statusCell.appendChild(status); row.appendChild(statusCell);
+        const actions = document.createElement('td');
+        if (application.seller_status === 'pending') {
+            const approve = document.createElement('button'); approve.type = 'button'; approve.className = 'btn btn-success'; approve.textContent = 'Approve';
+            approve.addEventListener('click', () => reviewSellerApplication(application.id, 'approved', approve));
+            const reject = document.createElement('button'); reject.type = 'button'; reject.className = 'btn btn-secondary'; reject.textContent = 'Reject';
+            reject.addEventListener('click', () => reviewSellerApplication(application.id, 'rejected', reject));
+            actions.append(approve, reject);
+        } else if (application.seller_reviewed_at) {
+            const reviewed = document.createElement('span'); reviewed.textContent = `Reviewed ${new Date(application.seller_reviewed_at).toLocaleDateString()}`; actions.appendChild(reviewed);
+        }
+        row.appendChild(actions); tbody.appendChild(row);
+    });
+}
+
+async function reviewSellerApplication(id, decision, button) {
+    if (decision === 'rejected' && !window.confirm('Reject this seller application? The seller will not be able to sign in.')) return;
+    button.disabled = true;
+    try {
+        await window.bookStore.reviewSellerApplication(id, decision);
+        await loadSellerApplications();
+        const notice = document.getElementById('adminDataError');
+        if (notice) notice.remove();
+    } catch (error) {
+        showPageError(error.message || 'Seller application could not be reviewed.'); button.disabled = false;
+    }
+}
+window.loadSellerApplications = loadSellerApplications;
 
 async function loadMessageCustomers() {
     const select = document.getElementById('messageCustomerSelect'); if (!select) return;

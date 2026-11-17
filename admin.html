@@ -30,6 +30,9 @@
             <a href="#" class="nav-item" onclick="showSection('buyers', this); return false;">
                 <i class="fas fa-users"></i> All Buyers
             </a>
+            <a href="#" class="nav-item" onclick="showSection('sellers', this); return false;">
+                <i class="fas fa-user-check"></i> Seller Screening <span class="seller-pending-count" id="sellerPendingCount" hidden>0</span>
+            </a>
             <a href="#" class="nav-item" onclick="showSection('messages', this); return false;">
                 <i class="fas fa-comments"></i> Customer Messages
             </a>
@@ -207,6 +210,20 @@
                     <tbody id="ordersTableBody">
                         <!-- Populated by JavaScript -->
                     </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="sellers" class="section">
+            <div class="section-header"><h1>Seller Screening</h1></div>
+            <p class="admin-help-note">Review seller applications here. Applicants cannot enter the seller portal until approved. Rejections are recorded and the applicant cannot sign in.</p>
+            <div class="table-container">
+                <label class="seller-filter-label" for="sellerStatusFilter">Show applications</label>
+                <select id="sellerStatusFilter" class="seller-status-filter">
+                    <option value="pending">Pending review</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="all">All applications</option>
+                </select>
+                <table><thead><tr><th>Applicant</th><th>Email</th><th>Phone</th><th>Applied</th><th>Status</th><th>Review</th></tr></thead>
+                    <tbody id="sellerApplicationsTableBody"><tr><td colspan="6">Loading seller applications…</td></tr></tbody>
                 </table>
             </div>
         </section>

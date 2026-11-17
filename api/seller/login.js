@@ -17,11 +17,14 @@ export default async function handler(request, response) {
   try {
     const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error || !data.session) return response.status(401).json({ error: 'Invalid seller credentials.' });
-    const { data: profile, error: profileError } = await client.from('profiles').select('role').eq('id', data.user.id).single();
-    if (profileError || profile?.role !== 'seller') {
+    const { data: profile, error: profileError } = await client.from('profiles').select('role, seller_status').eq('id', data.user.id).single();
+    if (profileError) {
       await client.auth.signOut();
-      return response.status(401).json({ error: 'Invalid seller credentials.' });
+      return response.status(503).json({ error: 'Seller approvals are not set up yet. Please contact the bookstore administrator.' });
     }
+    if (profile?.role !== 'seller') { await client.auth.signOut(); return response.status(401).json({ error: 'Invalid seller credentials.' }); }
+    if (profile.seller_status === 'pending') { await client.auth.signOut(); return response.status(403).json({ error: 'Your seller application is pending admin review.' }); }
+    if (profile.seller_status !== 'approved') { await client.auth.signOut(); return response.status(403).json({ error: 'Your seller application was not approved. Please contact the bookstore administrator.' }); }
     return response.status(200).json({ session: data.session });
   } catch {
     return response.status(500).json({ error: 'Unable to sign in right now.' });
