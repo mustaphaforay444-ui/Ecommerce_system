@@ -179,7 +179,26 @@ window.bookStore = {
 
   async signIn(email, password) {
     const client = await db();
-    return unwrap(await client.auth.signInWithPassword({ email, password }));
+    const response = await fetch('/api/customer/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Unable to sign in.');
+    return unwrap(await client.auth.setSession({ access_token: result.session.access_token, refresh_token: result.session.refresh_token }));
+  },
+
+  async signInSeller(email, password) {
+    const client = await db();
+    const response = await fetch('/api/seller/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Unable to sign in.');
+    return unwrap(await client.auth.setSession({ access_token: result.session.access_token, refresh_token: result.session.refresh_token }));
   },
 
   async signInAdmin(identifier, password) {
@@ -230,6 +249,16 @@ window.bookStore = {
     if (error) throw error;
     if (!user) return null;
     return unwrap(await client.from('profiles').select('*').eq('id', user.id).single());
+  },
+
+  async requireRole(role) {
+    const profile = await this.currentProfile();
+    if (profile?.role === role) return profile;
+    const client = await db();
+    await client.auth.signOut();
+    const path = profile?.role === 'admin' ? 'admin-login.html' : profile?.role === 'seller' ? 'seller-login.html' : 'login.html';
+    window.location.replace(path);
+    return null;
   },
 
   async updateMyProfile({ full_name, phone }) {

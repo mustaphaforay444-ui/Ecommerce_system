@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Seller Sign In - Reader’s Corner</title>
+  <script type="module" src="supabase-client.js"></script><script type="module" src="supabase-repository.js"></script>
+  <style>
+    *{box-sizing:border-box}body{min-height:100vh;margin:0;padding:20px;display:grid;place-items:center;background:linear-gradient(135deg,#0752a0,#00a6df);font:16px Arial,sans-serif;color:#243447}.card{width:min(100%,440px);padding:34px;border-radius:16px;background:#fff;box-shadow:0 18px 48px #001f4a3d}h1{margin:0 0 8px}p{line-height:1.5;color:#5b6875}label{display:block;margin:18px 0 7px;font-weight:700}input{width:100%;padding:12px;border:1px solid #cbd5df;border-radius:8px;font:inherit}button{width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#087fbd;color:white;font:inherit;font-weight:700;cursor:pointer}.error{color:#b42318;min-height:22px}a{color:#087fbd}
+  </style>
+</head>
+<body><main class="card">
+  <h1>Seller sign in</h1><p>This secure sign-in is only for seller accounts.</p>
+  <form id="sellerLoginForm"><label for="email">Seller email</label><input id="email" type="email" autocomplete="username" required>
+    <label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required>
+    <button type="submit">Sign in</button><p id="message" class="error" role="alert" aria-live="polite"></p>
+  </form><a href="index.html">Back to bookstore</a>
+</main>
+<script>
+  document.getElementById('sellerLoginForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const button = event.currentTarget.querySelector('button'); const message = document.getElementById('message');
+    button.disabled = true; message.textContent = '';
+    try { await window.bookStore.signInSeller(document.getElementById('email').value.trim(), document.getElementById('password').value); location.replace('seller.html'); }
+    catch (error) { message.textContent = error.message || 'Unable to sign in.'; button.disabled = false; }
+  });
+</script></body></html>

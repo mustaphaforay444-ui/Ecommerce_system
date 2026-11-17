@@ -8,10 +8,14 @@ async function initializePortal() {
   try {
     const client = await window.supabaseReady;
     const { data: { user } } = await client.auth.getUser();
-    if (!user) { location.href = 'login.html?next=customer-portal.html'; return; }
+    if (!user) { location.replace('login.html?next=customer-portal.html'); return; }
     portalUser = user;
     const profile = await window.bookStore.currentProfile();
-    if (profile?.role === 'admin') { location.href = 'admin.html'; return; }
+    if (profile?.role !== 'customer') {
+      await window.bookStore.signOut();
+      location.replace(profile?.role === 'admin' ? 'admin-login.html' : profile?.role === 'seller' ? 'seller-login.html' : 'login.html');
+      return;
+    }
     document.getElementById('portalGreeting').textContent = `Welcome, ${profile.full_name || 'Reader'}`;
     document.getElementById('portalEmail').textContent = profile.email || user.email || '';
     document.getElementById('profileName').value = profile.full_name || '';

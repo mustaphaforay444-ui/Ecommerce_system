@@ -24,6 +24,8 @@ async function loadWishlist() {
     empty.style.display = 'none';
     try {
         await window.supabaseReady;
+        const profile = await window.bookStore.currentProfile();
+        if (profile?.role !== 'customer') { await window.bookStore.requireRole('customer'); return; }
         const books = await window.bookStore.getWishlist();
         container.replaceChildren();
         if (!books.length) { container.style.display = 'none'; empty.style.display = 'block'; return; }

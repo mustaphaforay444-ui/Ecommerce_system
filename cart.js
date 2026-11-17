@@ -78,6 +78,8 @@ async function loadCart() {
             updateTotals();
             return;
         }
+        const profile = await window.bookStore.currentProfile();
+        if (profile?.role !== 'customer') { await window.bookStore.requireRole('customer'); return; }
         currentCart = normalizeCartItems(await window.bookStore.getCart());
     } catch (error) {
         container.innerHTML = `<p class="cart-error" role="alert">Your cart could not be loaded. ${String(error.message || 'Please try again.')}</p>`;

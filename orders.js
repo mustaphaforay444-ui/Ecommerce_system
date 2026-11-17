@@ -11,6 +11,8 @@ async function loadOrders() {
     const client = await window.supabaseReady;
     const { data: { user } } = await client.auth.getUser();
     if (!user) { message.textContent = 'Sign in to see orders linked to your account.'; list.replaceChildren(); return; }
+    const profile = await window.bookStore.currentProfile();
+    if (profile?.role !== 'customer') { await window.bookStore.requireRole('customer'); return; }
     const orders = await window.bookStore.getMyOrders();
     message.textContent = orders.length ? '' : 'You have not placed any orders yet.';
     list.replaceChildren(...orders.map(renderOrder));

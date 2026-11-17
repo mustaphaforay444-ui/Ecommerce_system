@@ -621,7 +621,14 @@
                 if (window.supabaseReady) {
                     const client = await window.supabaseReady;
                     const { data: { session } } = await client.auth.getSession();
-                    if (session) window.location.href = destinationAfterAuth();
+                    if (session) {
+                        const profile = await window.bookStore.currentProfile();
+                        if (profile?.role === 'customer') window.location.replace(destinationAfterAuth());
+                        else {
+                            await window.bookStore.signOut();
+                            document.getElementById('loginPasswordError').textContent = 'This is the customer sign-in. Use the separate sign-in page for your account type.';
+                        }
+                    }
                 }
             } catch (error) {
                 document.getElementById('loginPasswordError').textContent = error.message || 'Account service is unavailable.';

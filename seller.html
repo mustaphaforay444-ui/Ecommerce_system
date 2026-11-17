@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Seller Account - Reader’s Corner</title>
+  <script type="module" src="supabase-client.js"></script><script type="module" src="supabase-repository.js"></script>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f3f7fb;color:#18324b;font:16px Arial,sans-serif}.top{background:#0b3f87;color:white;padding:18px max(20px,calc((100% - 900px)/2));display:flex;justify-content:space-between;align-items:center;gap:16px}.top a{color:white}main{width:min(100% - 32px,760px);margin:36px auto}.panel{padding:26px;background:white;border-radius:12px;box-shadow:0 6px 22px #1232}form{display:grid;gap:15px}label{display:grid;gap:7px;font-weight:700}input{padding:12px;border:1px solid #b8c7d6;border-radius:7px;font:inherit}button{padding:12px 18px;border:0;border-radius:7px;background:#087fbd;color:white;font-weight:700;cursor:pointer}button:disabled{opacity:.65}.notice{min-height:24px;color:#536778}
+  </style>
+</head>
+<body><header class="top"><strong>Reader’s Corner · Seller Account</strong><button id="signOut" type="button">Sign out</button></header>
+<main><h1>My seller account</h1><p class="notice" id="notice" role="status">Checking your account…</p>
+  <section class="panel"><form id="profileForm">
+    <label>Full name<input id="fullName" maxlength="120" required></label>
+    <label>Email<input id="email" type="email" readonly></label>
+    <label>Phone<input id="phone" type="tel" maxlength="40"></label>
+    <button id="save" type="submit">Save my details</button>
+  </form></section>
+</main><script src="seller.js" defer></script></body></html>

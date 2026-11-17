@@ -3,6 +3,8 @@
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/seller", "destination": "/seller.html" },
+    { "source": "/seller-login", "destination": "/seller-login.html" },
     { "source": "/shop", "destination": "/index.html" },
     { "source": "/orders", "destination": "/orders.html" }
   ],
@@ -12,7 +14,8 @@
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" }
       ]
     }
   ]
