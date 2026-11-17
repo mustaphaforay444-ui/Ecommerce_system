@@ -114,17 +114,23 @@
 
         form.addEventListener('submit', async event => {
             event.preventDefault();
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton.disabled) return;
             message.textContent = '';
             const identifier = document.getElementById('adminIdentifier').value.trim();
             const password = document.getElementById('adminPassword').value;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Signing in…';
 
             try {
                 if (!window.bookStore) throw new Error('The authentication service is not available.');
                 await window.supabaseReady;
                 await window.bookStore.signInAdmin(identifier, password);
-                window.location.href = 'admin.html';
+                window.location.replace('admin.html');
             } catch (error) {
                 message.textContent = error.message || 'The username/email or password is incorrect.';
+                submitButton.disabled = false;
+                submitButton.textContent = 'Sign in';
             }
         });
     </script>

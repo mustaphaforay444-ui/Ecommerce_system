@@ -25,9 +25,10 @@
   });
   document.getElementById('sellerLoginForm').addEventListener('submit', async event => {
     event.preventDefault();
-    const button = event.currentTarget.querySelector('button'); const message = document.getElementById('message');
-    button.disabled = true; message.textContent = '';
+    const button = event.currentTarget.querySelector('button[type="submit"]'); const message = document.getElementById('message');
+    if (button.disabled) return;
+    button.disabled = true; button.textContent = 'Signing in…'; message.textContent = '';
     try { await window.bookStore.signInSeller(document.getElementById('email').value.trim(), document.getElementById('password').value); location.replace('seller.html'); }
-    catch (error) { message.textContent = error.message || 'Unable to sign in.'; button.disabled = false; }
+    catch (error) { message.textContent = error.message || 'Unable to sign in.'; button.disabled = false; button.textContent = 'Sign in'; }
   });
 </script></body></html>

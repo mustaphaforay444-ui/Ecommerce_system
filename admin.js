@@ -9,7 +9,7 @@ let adminOrdersChannel = null;
 let adminMessagesChannel = null;
 let sellerApplications = [];
 
-document.addEventListener('DOMContentLoaded', async () => {
+function initializeAdminAfterAuthorization() {
     document.getElementById('categoryName')?.addEventListener('input', event => {
         if (editingCategoryId) return;
         document.getElementById('categorySlug').value = event.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -19,14 +19,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('messageCustomerSelect')?.addEventListener('change', loadAdminMessages);
     document.getElementById('adminMessageForm')?.addEventListener('submit', sendAdminMessage);
     document.getElementById('sellerStatusFilter')?.addEventListener('change', renderSellerApplications);
+    const sidebar = document.querySelector('.admin-sidebar');
+    const menuToggle = document.getElementById('adminMenuToggle');
+    const closeAdminMenu = () => { sidebar?.classList.remove('menu-open'); menuToggle?.setAttribute('aria-expanded', 'false'); };
+    menuToggle?.addEventListener('click', () => {
+        const open = sidebar.classList.toggle('menu-open');
+        menuToggle.setAttribute('aria-expanded', String(open));
+    });
+    document.querySelectorAll('.admin-nav .nav-item').forEach(item => item.addEventListener('click', closeAdminMenu));
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeAdminMenu(); });
     try {
         await window.supabaseReady;
-        await window.bookStore.currentProfile();
-        subscribeToAdminOrderUpdates(await window.supabaseReady);
-        subscribeToAdminMessageUpdates(await window.supabaseReady);
+        const client = await window.supabaseReady;
+        subscribeToAdminOrderUpdates(client);
+        subscribeToAdminMessageUpdates(client);
         await Promise.all([loadDashboard(), populateCategories(), loadCategoriesTable(), loadBooksTable(), loadOrdersTable(), loadBuyersTable(), loadSellerApplications()]);
     } catch (error) { showPageError(error.message || 'Admin data could not be loaded.'); }
-});
+}
+
+if (document.body.classList.contains('admin-auth-checking')) {
+    window.addEventListener('admin:authorized', initializeAdminAfterAuthorization, { once: true });
+} else {
+    initializeAdminAfterAuthorization();
+}
 
 function subscribeToAdminOrderUpdates(client) {
     if (adminOrdersChannel) return;

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { parseJsonBody } from '../_utils/parse-json-body.js';
 
 export default async function handler(request, response) {
   response.setHeader('Cache-Control', 'no-store');
@@ -6,10 +7,14 @@ export default async function handler(request, response) {
   response.setHeader('X-Content-Type-Options', 'nosniff');
   if (request.method !== 'POST') return response.status(405).json({ error: 'Method not allowed' });
 
+  let body;
+  try { body = await parseJsonBody(request); }
+  catch { return response.status(400).json({ error: 'Invalid sign-in request.' }); }
+
   const url = process.env.SUPABASE_URL;
   const anonKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
-  const email = String(request.body?.email || '').trim();
-  const password = String(request.body?.password || '');
+  const email = String(body.email || '').trim();
+  const password = String(body.password || '');
   if (!url || !anonKey) return response.status(503).json({ error: 'Authentication service is not configured.' });
   if (!email || !password) return response.status(400).json({ error: 'Enter your seller email and password.' });
 

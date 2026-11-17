@@ -8,6 +8,31 @@ function unwrap(result) {
   return result.data;
 }
 
+async function requestRoleLogin(endpoint, payload) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+    let result;
+    try { result = await response.json(); }
+    catch (error) {
+      if (error.name === 'AbortError') throw error;
+      throw new Error('The sign-in service returned an invalid response. Please try again.');
+    }
+    if (!response.ok) throw new Error(result.error || 'Unable to sign in.');
+    if (!result.session?.access_token || !result.session?.refresh_token) throw new Error('The sign-in service did not return a valid session.');
+    return result.session;
+  } catch (error) {
+    if (error.name === 'AbortError') throw new Error('Sign-in timed out. Check your connection and try again.');
+    throw error;
+  } finally { clearTimeout(timeout); }
+}
+
 function mapProduct(row) {
   const cover = row.product_images?.find(image => image.is_primary) || row.product_images?.[0];
   return {
@@ -179,26 +204,14 @@ window.bookStore = {
 
   async signIn(email, password) {
     const client = await db();
-    const response = await fetch('/api/customer/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Unable to sign in.');
-    return unwrap(await client.auth.setSession({ access_token: result.session.access_token, refresh_token: result.session.refresh_token }));
+    const session = await requestRoleLogin('/api/customer/login', { email, password });
+    return unwrap(await client.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token }));
   },
 
   async signInSeller(email, password) {
     const client = await db();
-    const response = await fetch('/api/seller/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Unable to sign in.');
-    return unwrap(await client.auth.setSession({ access_token: result.session.access_token, refresh_token: result.session.refresh_token }));
+    const session = await requestRoleLogin('/api/seller/login', { email, password });
+    return unwrap(await client.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token }));
   },
 
   async getSellerApplications() {
@@ -215,16 +228,10 @@ window.bookStore = {
 
   async signInAdmin(identifier, password) {
     const client = await db();
-    const response = await fetch('/api/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ identifier, password })
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Unable to sign in.');
+    const session = await requestRoleLogin('/api/admin/login', { identifier, password });
     const saved = unwrap(await client.auth.setSession({
-      access_token: result.session.access_token,
-      refresh_token: result.session.refresh_token
+      access_token: session.access_token,
+      refresh_token: session.refresh_token
     }));
     return { user: saved.user, session: saved.session };
   },

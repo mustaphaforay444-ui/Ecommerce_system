@@ -135,6 +135,8 @@
             box-shadow: 0 5px 20px rgba(0, 119, 190, 0.3);
         }
 
+        .btn:disabled { cursor: wait; opacity: .72; transform: none; box-shadow: none; }
+
         .btn-secondary {
             background: white;
             color: #0077be;
@@ -347,7 +349,7 @@
                     <span class="error-message" id="loginPasswordError"></span>
                 </div>
 
-                <button class="btn btn-primary" onclick="handleLogin()">Sign In</button>
+                <button class="btn btn-primary" id="customerLoginButton" onclick="handleLogin()">Sign In</button>
                 <button class="btn btn-secondary" onclick="toggleForms()">Create New Account</button>
 
                 <div class="toggle-form">
@@ -503,7 +505,9 @@
             }
         }
 
+        let customerLoginInProgress = false;
         async function handleLogin() {
+            if (customerLoginInProgress) return;
             clearErrors();
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
@@ -523,13 +527,22 @@
             }
 
             if (isValid) {
+                customerLoginInProgress = true;
+                const loginButton = document.getElementById('customerLoginButton');
+                loginButton.disabled = true;
+                loginButton.textContent = 'Signing in…';
+                let redirected = false;
                 try {
                     if (!window.bookStore) throw new Error('The account service is unavailable. Please try again shortly.');
                     await window.bookStore.signIn(email, password);
                     document.getElementById('successMessage').style.display = 'block';
+                    redirected = true;
                     window.location.replace(destinationAfterAuth());
                 } catch (error) {
                     document.getElementById('loginPasswordError').textContent = error.message || 'Unable to sign in.';
+                } finally {
+                    customerLoginInProgress = false;
+                    if (!redirected) { loginButton.disabled = false; loginButton.textContent = 'Sign In'; }
                 }
             }
         }
