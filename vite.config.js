@@ -8,6 +8,23 @@ const htmlEntries = fs.readdirSync(root)
   .filter(name => name.endsWith('.html'))
   .map(name => path.resolve(root, name));
 
+function copyClassicPageScripts() {
+  const scripts = ['admin.js', 'cart.js', 'contact.js', 'orders.js', 'project12.js', 'product-view.js', 'wishlist.js'];
+  return {
+    name: 'readers-corner-classic-page-scripts',
+    apply: 'build',
+    generateBundle() {
+      for (const script of scripts) {
+        this.emitFile({
+          type: 'asset',
+          fileName: script,
+          source: fs.readFileSync(path.join(root, script))
+        });
+      }
+    }
+  };
+}
+
 function localConfigEndpoint(env) {
   return {
     name: 'readers-corner-local-config',
@@ -36,7 +53,7 @@ function localConfigEndpoint(env) {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, root, '');
   return {
-    plugins: [localConfigEndpoint(env)],
+    plugins: [localConfigEndpoint(env), copyClassicPageScripts()],
     publicDir: 'public',
     build: {
       outDir: 'dist',
