@@ -22,7 +22,8 @@ function mapProduct(row) {
     publisher: row.publisher || '',
     year: row.publication_year || '',
     description: row.description || '',
-    image: cover?.public_url || row.image_url || ''
+    image: cover?.public_url || row.image_url || '',
+    is_active: row.is_active !== false
   };
 }
 
@@ -57,6 +58,13 @@ window.bookStore = {
       ? await client.from('categories').update(payload).eq('id', category.id).select().single()
       : await client.from('categories').insert(payload).select().single();
     return unwrap(result);
+  },
+
+  async deleteCategory(categoryId) {
+    const client = await db();
+    const products = unwrap(await client.from('products').select('id').eq('category_id', categoryId).limit(1));
+    if (products.length) throw new Error('This category still has books. Move or delete those books before deleting the category.');
+    return unwrap(await client.from('categories').delete().eq('id', categoryId).select('id').single());
   },
 
   async setCategoryActive(categoryId, isActive) {
@@ -124,6 +132,24 @@ window.bookStore = {
   async archiveProduct(productId) {
     const client = await db();
     return unwrap(await client.from('products').update({ is_active: false }).eq('id', productId));
+  },
+
+  async setProductActive(productId, isActive) {
+    const client = await db();
+    return unwrap(await client.from('products').update({ is_active: isActive }).eq('id', productId).select('id').single());
+  },
+
+  async deleteProduct(productId) {
+    const client = await db();
+    const images = unwrap(await client.from('product_images').select('storage_path').eq('product_id', productId));
+    const deleted = unwrap(await client.from('products').delete().eq('id', productId).select('id').single());
+    const paths = images.map(image => image.storage_path).filter(Boolean);
+    let coverCleanupFailed = false;
+    if (paths.length) {
+      const removal = await client.storage.from('book-covers').remove(paths);
+      coverCleanupFailed = Boolean(removal.error);
+    }
+    return { ...deleted, coverCleanupFailed };
   },
 
   async getWishlist() {

@@ -424,6 +424,10 @@ tr:hover {
     font-size: 0.9rem;
 }
 
+.admin-row-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; min-width: 220px; }
+.admin-row-actions button { white-space: nowrap; }
+#productsTable { min-width: 900px; }
+
 /* ================================
    IMAGES GALLERY
    ================================ */

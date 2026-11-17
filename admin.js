@@ -4,6 +4,7 @@ let orders = [];
 let buyers = [];
 let editingId = null;
 let editingCategoryId = null;
+let editingCategoryIsActive = true;
 let adminOrdersChannel = null;
 let adminMessagesChannel = null;
 
@@ -98,14 +99,19 @@ async function populateCategories() {
 
 function showCategoryForm(category = null) {
     editingCategoryId = category?.id || null;
+    editingCategoryIsActive = category?.is_active !== false;
     const form = document.getElementById('categoryForm');
     form.reset();
     document.getElementById('categoryName').value = category?.name || '';
     document.getElementById('categorySlug').value = category?.slug || '';
     document.getElementById('categorySort').value = category?.sort_order ?? categories.length + 1;
     form.hidden = false;
+    requestAnimationFrame(() => {
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById('categoryName').focus({ preventScroll: true });
+    });
 }
-function hideCategoryForm() { document.getElementById('categoryForm').hidden = true; editingCategoryId = null; }
+function hideCategoryForm() { document.getElementById('categoryForm').hidden = true; editingCategoryId = null; editingCategoryIsActive = true; }
 async function saveCategory(event) {
     event.preventDefault();
     try {
@@ -113,7 +119,8 @@ async function saveCategory(event) {
             id: editingCategoryId,
             name: document.getElementById('categoryName').value,
             slug: document.getElementById('categorySlug').value || document.getElementById('categoryName').value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-            sort_order: document.getElementById('categorySort').value
+            sort_order: document.getElementById('categorySort').value,
+            is_active: editingCategoryIsActive
         });
         hideCategoryForm(); await populateCategories(); await loadCategoriesTable();
     } catch (error) { showPageError(error.message || 'Category could not be saved.'); }
@@ -121,6 +128,14 @@ async function saveCategory(event) {
 async function toggleCategory(id, active) {
     try { await window.bookStore.setCategoryActive(id, active); await populateCategories(); await loadCategoriesTable(); }
     catch (error) { showPageError(error.message || 'Category could not be updated.'); }
+}
+async function deleteCategory(id) {
+    const category = categories.find(item => String(item.id) === String(id));
+    if (!category || !confirm(`Permanently delete “${category.name}”? Categories with books assigned to them cannot be deleted.`)) return;
+    try {
+        await window.bookStore.deleteCategory(id);
+        await populateCategories(); await loadCategoriesTable();
+    } catch (error) { showPageError(error.message || 'Category could not be deleted.'); }
 }
 async function loadCategoriesTable() {
     const tbody = document.getElementById('categoriesTableBody'); if (!tbody) return;
@@ -130,10 +145,11 @@ async function loadCategoriesTable() {
     categories.forEach(category => {
         const row = document.createElement('tr');
         [category.name, category.slug, String(category.sort_order), category.is_active ? 'Active' : 'Archived'].forEach(value => { const td = document.createElement('td'); td.textContent = value; row.appendChild(td); });
-        const actions = document.createElement('td');
+        const actions = document.createElement('td'); const actionGroup = document.createElement('div'); actionGroup.className = 'admin-row-actions';
         const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'btn btn-edit'; edit.textContent = 'Edit'; edit.addEventListener('click', () => showCategoryForm(category));
         const archive = document.createElement('button'); archive.type = 'button'; archive.className = 'btn btn-secondary'; archive.textContent = category.is_active ? 'Archive' : 'Restore'; archive.addEventListener('click', () => toggleCategory(category.id, !category.is_active));
-        actions.append(edit, archive); row.appendChild(actions); tbody.appendChild(row);
+        const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'btn btn-danger'; remove.textContent = 'Delete'; remove.addEventListener('click', () => deleteCategory(category.id));
+        actionGroup.append(edit, archive, remove); actions.appendChild(actionGroup); row.appendChild(actions); tbody.appendChild(row);
     });
 }
 window.showCategoryForm = showCategoryForm;
@@ -146,7 +162,7 @@ function showAddBookForm() {
     document.querySelector('#productForm form').reset();
     document.getElementById('productForm').style.display = 'block';
 }
-function hideAddBookForm() { document.getElementById('productForm').style.display = 'none'; }
+function hideAddBookForm() { document.getElementById('productForm').style.display = 'none'; editingId = null; }
 window.showAddBookForm = showAddBookForm;
 window.hideAddBookForm = hideAddBookForm;
 
@@ -168,6 +184,7 @@ async function saveBook(event) {
             publisher: document.getElementById('productPublisher')?.value.trim() || '',
             year: document.getElementById('productYear')?.value || ''
         };
+        product.is_active = editingId ? products.find(book => String(book.id) === String(editingId))?.is_active !== false : true;
         const file = document.getElementById('productCoverFile')?.files?.[0];
         const saved = await window.bookStore.saveProduct(product);
         const previousImage = editingId ? products.find(book => String(book.id) === String(editingId))?.image : '';
@@ -181,44 +198,69 @@ async function saveBook(event) {
 }
 window.saveBook = saveBook;
 
-function editBook(id) {
-    const product = products.find(book => String(book.id) === String(id));
-    if (!product) return;
-    editingId = product.id;
-    document.querySelector('#productForm h2').textContent = 'Edit Book';
-    document.getElementById('productName').value = product.name || '';
-    document.getElementById('productPrice').value = product.price ?? '';
-    document.getElementById('productCategory').value = categories.find(category => category.name === product.category)?.id || '';
-    document.getElementById('productStock').value = product.stock ?? '';
-    document.getElementById('productImage').value = product.image || '';
-    document.getElementById('productDescription').value = product.description || '';
-    for (const [field, value] of [['productAuthor', product.author], ['productIsbn', product.isbn], ['productPublisher', product.publisher], ['productYear', product.year]]) {
-        const input = document.getElementById(field); if (input) input.value = value || '';
-    }
-    document.getElementById('productForm').style.display = 'block';
+async function editBook(id) {
+    try {
+        if (!categories.length) await populateCategories();
+        const product = products.find(book => String(book.id) === String(id));
+        if (!product) throw new Error('This book is no longer in the list. Refresh the page and try again.');
+        editingId = product.id;
+        document.querySelector('#productForm h2').textContent = 'Edit Book';
+        document.getElementById('productName').value = product.name || '';
+        document.getElementById('productPrice').value = product.price ?? '';
+        const category = categories.find(item => item.name === product.category);
+        const categorySelect = document.getElementById('productCategory');
+        if (category && !category.is_active && ![...categorySelect.options].some(option => option.value === category.id)) {
+            categorySelect.add(new Option(`${category.name} (archived)`, category.id));
+        }
+        categorySelect.value = category?.id || '';
+        document.getElementById('productStock').value = product.stock ?? '';
+        document.getElementById('productImage').value = product.image || '';
+        document.getElementById('productDescription').value = product.description || '';
+        for (const [field, value] of [['productAuthor', product.author], ['productIsbn', product.isbn], ['productPublisher', product.publisher], ['productYear', product.year]]) {
+            const input = document.getElementById(field); if (input) input.value = value || '';
+        }
+        const form = document.getElementById('productForm');
+        form.style.display = 'block';
+        requestAnimationFrame(() => {
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.getElementById('productName').focus({ preventScroll: true });
+        });
+    } catch (error) { showPageError(error.message || 'Book could not be opened for editing.'); }
 }
 window.editBook = editBook;
 
 async function deleteBook(id) {
-    if (!confirm('Archive this book from the public catalogue?')) return;
-    try { await window.bookStore.archiveProduct(id); await refreshAdminData(); }
-    catch (error) { showPageError(error.message || 'Book could not be archived.'); }
+    const product = products.find(book => String(book.id) === String(id));
+    if (!product || !confirm(`Permanently delete “${product.name}”? Its reviews, cart entries, reading-list entries and cover records will be removed. Existing order history will be kept.`)) return;
+    try {
+        const result = await window.bookStore.deleteProduct(id);
+        await refreshAdminData();
+        if (result.coverCleanupFailed) showPageError('Book deleted, but its stored cover image could not be removed.');
+    } catch (error) { showPageError(error.message || 'Book could not be deleted.'); }
 }
 window.deleteBook = deleteBook;
 
+async function toggleProductActive(id) {
+    const product = products.find(book => String(book.id) === String(id));
+    if (!product) return;
+    try { await window.bookStore.setProductActive(id, product.is_active === false); await refreshAdminData(); }
+    catch (error) { showPageError(error.message || 'Book visibility could not be updated.'); }
+}
+
 async function loadBooksTable() {
     const tbody = document.getElementById('productsTableBody'); if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="6">Loading books…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7">Loading books…</td></tr>';
     products = await window.bookStore.getAdminProducts(); tbody.replaceChildren();
-    if (!products.length) { tbody.innerHTML = '<tr><td colspan="6">No books in the catalogue yet.</td></tr>'; return; }
+    if (!products.length) { tbody.innerHTML = '<tr><td colspan="7">No books in the catalogue yet.</td></tr>'; return; }
     products.forEach(book => {
         const row = document.createElement('tr');
-        const values = [book.name, book.category || '—', `KES ${book.price.toLocaleString()}`, String(book.stock), book.rating ? `★ ${book.rating}` : '—'];
+        const values = [book.name, book.category || '—', `KES ${book.price.toLocaleString()}`, String(book.stock), book.rating ? `★ ${book.rating}` : '—', book.is_active ? 'Active' : 'Archived'];
         values.forEach(value => { const cell = document.createElement('td'); cell.textContent = value; row.appendChild(cell); });
-        const actions = document.createElement('td');
-        const edit = document.createElement('button'); edit.className = 'btn btn-edit'; edit.textContent = 'Edit'; edit.addEventListener('click', () => editBook(book.id));
-        const remove = document.createElement('button'); remove.className = 'btn btn-danger'; remove.textContent = 'Archive'; remove.addEventListener('click', () => deleteBook(book.id));
-        actions.append(edit, remove); row.appendChild(actions); tbody.appendChild(row);
+        const actions = document.createElement('td'); const actionGroup = document.createElement('div'); actionGroup.className = 'admin-row-actions';
+        const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'btn btn-edit'; edit.textContent = 'Edit'; edit.addEventListener('click', () => editBook(book.id));
+        const visibility = document.createElement('button'); visibility.type = 'button'; visibility.className = 'btn btn-secondary'; visibility.textContent = book.is_active ? 'Archive' : 'Restore'; visibility.addEventListener('click', () => toggleProductActive(book.id));
+        const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'btn btn-danger'; remove.textContent = 'Delete'; remove.addEventListener('click', () => deleteBook(book.id));
+        actionGroup.append(edit, visibility, remove); actions.appendChild(actionGroup); row.appendChild(actions); tbody.appendChild(row);
     });
 }
 window.loadBooksTable = loadBooksTable;
