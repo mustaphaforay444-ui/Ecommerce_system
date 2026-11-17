@@ -655,15 +655,20 @@
 @media (max-width: 800px) { .bookstore-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .bookstore-gallery-grid { grid-template-columns: 1fr; } .bookstore-gallery-grid img { height: 220px; } }
 
-/* About page uses regular navigation without the hamburger drawer. */
-.about-page .hamburger,
+/* Keep About as its own page and provide a compact menu on small screens. */
 .about-page .side-menu { display: none !important; }
+.about-page .hamburger { display: none !important; }
 .about-page .header-nav { display: block !important; }
 .about-page .header-nav ul { list-style: none; flex-wrap: wrap; align-items: center; }
-
-@media (max-width: 900px) {
-    .about-page .header { flex-wrap: wrap; gap: 12px; }
+@media (max-width: 760px) {
+    .about-page .header { position: relative; flex-wrap: wrap; gap: 10px; }
     .about-page .header-left { flex: 1 1 auto; }
-    .about-page .header-right { flex: 1 1 100%; justify-content: center; flex-wrap: wrap; gap: 12px; }
-    .about-page .header-nav ul { justify-content: center; gap: 10px 16px; }
+    .about-page .header-right { flex: 1 1 100%; justify-content: center; flex-wrap: wrap; gap: 10px; }
+    .about-page .header-nav ul { justify-content: center; gap: 8px 14px; }
+    .about-page .header-nav a { font-size: .96rem; }
+}
+@media (max-width: 420px) {
+    .about-page .header-right { align-items: center; }
+    .about-page .header-nav ul { gap: 6px 10px; }
+    .about-page .header-nav a { font-size: .88rem; }
 }

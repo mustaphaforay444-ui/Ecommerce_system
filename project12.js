@@ -84,70 +84,26 @@ function navigateToSection(section) {
 }
 
 function filterByCategory(category) {
-    // Close the hamburger menu
-    const sideMenu = document.getElementById("sideMenu");
-    if(sideMenu) sideMenu.classList.remove("active");
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
+    document.querySelector(".side-menu")?.classList.remove("active");
     document.querySelector(".header")?.classList.remove("menu-open");
     document.querySelector(".home-library-gallery")?.setAttribute("hidden", "");
     document.querySelector(".featured-book-shelf")?.setAttribute("hidden", "");
-    
-    // Filter and display products
-    const filtered = books.filter(v => v.category === category);
-    
-    if(filtered.length === 0) {
-        document.querySelector(".products").innerHTML = `<h2 style="text-align:center; padding: 40px;">No books found in ${category}</h2>`;
-        return;
-    }
-    
-    let html = `<h2 class="catalog-category-title ${subjectClass(category)}">${category}</h2>`;
-    filtered.forEach((book) => {
-        const stockClass = book.stock > 45
-            ? "stock-very-high"
-            : book.stock > 30
-                ? "stock-high"
-                : book.stock > 15
-                    ? "stock-medium"
-                    : book.stock > 5
-                        ? "stock-low"
-                        : book.stock > 0
-                            ? "stock-critical"
-                            : "stock-out";
-        const stockText = book.stock > 0 ? `${book.stock} in stock` : "Out of stock";
-        
-        html += `
-        <div class="card ${subjectClass(category)}" style="opacity: 1;">
-            <div class="card-image-wrapper" onclick="quickAddToCart('${book.name.replace(/'/g, "\\'")}',${book.price},'${book.image}', event)">
-                <img src="${book.image}" alt="${book.name}" onerror="this.onerror=null;this.src='https://covers.openlibrary.org/b/isbn/${book.isbn}-M.jpg'">
-                <span class="stock-badge ${stockClass}">${stockText}</span>
-            </div>
-            <div class="card-content">
-                <h3>${book.name}</h3>
-                <div class="card-rating">
-                    <span class="stars">${'★'.repeat(Math.floor(book.rating))}</span>
-                    <span class="rating-value">${book.rating}</span>
-                </div>
-                <p class="card-category ${subjectClass(category)}">${book.category}</p>
-                <p class="card-price">KES ${book.price.toLocaleString()}</p>
-                <div class="card-actions">
-                    <button class="home-add-btn" onclick="quickAddToCart('${book.name.replace(/'/g, "\\'")}',${book.price},'${book.image}', event)" ${book.stock === 0 ? 'disabled' : ''}><i class="fas fa-plus"></i> Add</button>
-                    <button class="wishlist-heart-btn ${isProductInWishlist(book.id) ? "liked" : ""}" data-product-id="${book.id}" onclick="toggleWishlistByProductId('${book.id}', event)" title="Like">♡</button>
-                </div>
-            </div>
-        </div>
-        `;
-    });
-    
-    const productContainer = document.querySelector(".products");
-    if(productContainer) {
-        productContainer.innerHTML = html;
-        attachCardClicks();
-        updateWishlistButtons();
-        document.getElementById("bookCatalog")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    const filtered = books.filter(book => book.category === category);
+    renderCatalog(filtered, false);
+    document.getElementById("bookCatalog")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function showAllBooks() {
-    window.location.reload();
+    document.querySelector(".side-menu")?.classList.remove("active");
+    document.querySelector(".header")?.classList.remove("menu-open");
+    document.querySelector(".home-library-gallery")?.removeAttribute("hidden");
+    document.querySelector(".featured-book-shelf")?.removeAttribute("hidden");
+    const search = document.getElementById("searchInput");
+    if (search) search.value = "";
+    renderCatalog(books, true);
+    document.getElementById("bookCatalog")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 // Handle navigation link clicks
@@ -498,23 +454,6 @@ document.addEventListener("click", function(e){
     }
 });
 
-// Add click functionality to side menu categories
-document.addEventListener("DOMContentLoaded", function(){
-    const categoryItems = document.querySelectorAll("#categoryList > li");
-    categoryItems.forEach(item => {
-        if(item.textContent.trim() !== "" && item.tagName !== "HR") {
-            item.addEventListener("click", function(){
-                const category = this.textContent.trim();
-                showToastNotification(`Filtering by: ${category}`);
-                
-                // Filter products by category
-                filterBooksByCategory(category);
-                document.getElementById("sideMenu").classList.remove("active");
-            });
-        }
-    });
-});
-
 // Filter products by category
 function filterBooksByCategory(category) {
     filterByCategory(category);
@@ -535,31 +474,86 @@ let books = [];
 function subjectClass(category) { return "subject-" + String(category).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
 function resolveBookImage(path) { return String(path || ""); }
 
-function renderFeaturedBookShelf() {
-    const shelf = document.getElementById("featuredBooks");
-    if (!shelf) return;
-    const shownCategories = new Set();
-    const featured = books.filter(book => {
-        if (shownCategories.has(book.category)) return false;
-        shownCategories.add(book.category);
-        return true;
+function safeImageUrl(value) {
+    try {
+        const url = new URL(String(value || ''), window.location.href);
+        return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+    } catch (_) { return ''; }
+}
+
+function createBookCard(book) {
+    const card = document.createElement('article');
+    card.className = `card ${subjectClass(book.category)}`;
+    const imageWrapper = document.createElement('div'); imageWrapper.className = 'card-image-wrapper';
+    const image = document.createElement('img');
+    image.src = safeImageUrl(book.image) || (book.isbn ? `https://covers.openlibrary.org/b/isbn/${encodeURIComponent(book.isbn)}-M.jpg` : '');
+    image.alt = `Cover of ${book.name}`; image.loading = 'lazy'; image.decoding = 'async'; imageWrapper.appendChild(image);
+    const stock = Number(book.stock) || 0;
+    const badge = document.createElement('span');
+    badge.className = `stock-badge ${stock > 45 ? 'stock-very-high' : stock > 30 ? 'stock-high' : stock > 15 ? 'stock-medium' : stock > 5 ? 'stock-low' : stock > 0 ? 'stock-critical' : 'stock-out'}`;
+    badge.textContent = stock > 0 ? `${stock} in stock` : 'Out of stock'; imageWrapper.appendChild(badge);
+    const content = document.createElement('div'); content.className = 'card-content';
+    const title = document.createElement('h3'); title.textContent = book.name;
+    const rating = document.createElement('div'); rating.className = 'card-rating';
+    const stars = document.createElement('span'); stars.className = 'stars'; stars.textContent = '★'.repeat(Math.max(0, Math.min(5, Math.floor(Number(book.rating) || 0))));
+    const ratingValue = document.createElement('span'); ratingValue.className = 'rating-value'; ratingValue.textContent = String(Number(book.rating) || 0); rating.append(stars, ratingValue);
+    const category = document.createElement('p'); category.className = `card-category ${subjectClass(book.category)}`; category.textContent = book.category;
+    const price = document.createElement('p'); price.className = 'card-price'; price.textContent = `KES ${(Number(book.price) || 0).toLocaleString()}`;
+    const actions = document.createElement('div'); actions.className = 'card-actions';
+    const add = document.createElement('button'); add.className = 'home-add-btn'; add.type = 'button'; add.disabled = stock < 1; add.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i> Add';
+    add.addEventListener('click', event => quickAddToCart(book.name, book.price, book.image, event));
+    const wishlist = document.createElement('button'); wishlist.className = 'wishlist-heart-btn'; wishlist.type = 'button'; wishlist.dataset.productId = String(book.id); wishlist.title = 'Reading list';
+    wishlist.addEventListener('click', event => toggleWishlistByProductId(book.id, event));
+    actions.append(add, wishlist); content.append(title, rating, category, price, actions); card.append(imageWrapper, content);
+    card.addEventListener('click', event => { if (!event.target.closest('button')) viewBookDetails(books.findIndex(item => String(item.id) === String(book.id))); });
+    return card;
+}
+
+function renderCatalog(items = books, grouped = true) {
+    const container = document.querySelector('.products'); if (!container) return;
+    const fragment = document.createDocumentFragment(); let previousCategory = null;
+    items.forEach(book => {
+        if (grouped && book.category !== previousCategory) {
+            const heading = document.createElement('h2'); heading.className = `catalog-category-title ${subjectClass(book.category)}`; heading.textContent = book.category;
+            fragment.appendChild(heading); previousCategory = book.category;
+        }
+        fragment.appendChild(createBookCard(book));
     });
-    shelf.innerHTML = featured.map(book => {
-        const bookIndex = books.indexOf(book);
-        return `
-            <article class="featured-book-card ${subjectClass(book.category)}">
-                <div class="featured-book-cover">
-                <img src="${book.image}" alt="Cover of ${book.name}" loading="lazy">
-                </div>
-                <div class="featured-book-info">
-                    <p class="featured-book-category ${subjectClass(book.category)}">${book.category}</p>
-                    <h3>${book.name}</h3>
-                    <p class="featured-book-author">${book.author}</p>
-                    <p class="featured-book-price">KES ${book.price.toLocaleString()}</p>
-                    <button type="button" onclick="viewBookDetails(${bookIndex})">View book</button>
-                </div>
-            </article>`;
-    }).join("");
+    if (!items.length) {
+        const message = document.createElement('p'); message.className = 'catalog-data-message';
+        message.textContent = books.length ? 'No books are available in this category yet.' : 'There are no books available yet.'; fragment.appendChild(message);
+    }
+    container.replaceChildren(fragment); updateWishlistButtons();
+}
+
+function populateCategoryMenu() {
+    const list = document.getElementById('categoryList'); if (!list) return;
+    list.replaceChildren();
+    const addCategory = (label, action) => {
+        const item = document.createElement('li'); const button = document.createElement('button');
+        button.type = 'button'; button.textContent = label; button.addEventListener('click', action); item.appendChild(button); list.appendChild(item);
+    };
+    addCategory('All Books', showAllBooks);
+    [...new Set(books.map(book => book.category).filter(Boolean))].forEach(category => addCategory(category, () => filterByCategory(category)));
+}
+
+function renderFeaturedBookShelf() {
+    const shelf = document.getElementById('featuredBooks'); if (!shelf) return;
+    const seen = new Set(); const fragment = document.createDocumentFragment();
+    books.filter(book => book.category && !seen.has(book.category) && seen.add(book.category)).forEach(book => {
+        const card = document.createElement('article'); card.className = `featured-book-card ${subjectClass(book.category)}`;
+        const cover = document.createElement('div'); cover.className = 'featured-book-cover';
+        const image = document.createElement('img'); image.src = safeImageUrl(book.image); image.alt = `Cover of ${book.name}`; image.loading = 'lazy'; image.decoding = 'async'; cover.appendChild(image);
+        const info = document.createElement('div'); info.className = 'featured-book-info';
+        const category = document.createElement('p'); category.className = `featured-book-category ${subjectClass(book.category)}`; category.textContent = book.category;
+        const title = document.createElement('h3'); title.textContent = book.name;
+        const author = document.createElement('p'); author.className = 'featured-book-author'; author.textContent = book.author || '';
+        const price = document.createElement('p'); price.className = 'featured-book-price'; price.textContent = `KES ${(Number(book.price) || 0).toLocaleString()}`;
+        const button = document.createElement('button'); button.type = 'button'; button.textContent = 'View book';
+        button.addEventListener('click', () => viewBookDetails(books.findIndex(item => String(item.id) === String(book.id))));
+        info.append(category, title, author, price, button); card.append(cover, info); fragment.appendChild(card);
+    });
+    shelf.replaceChildren(fragment);
 }
 
 // ================================
@@ -571,30 +565,24 @@ document.addEventListener("DOMContentLoaded", async function(){
     try {
         if (!window.bookStore) throw new Error("The bookstore database client did not load.");
         await window.supabaseReady;
-        books = await window.bookStore.getProducts();
+        await refreshCatalog();
     } catch (error) {
-        if (catalogProductsContainer) catalogProductsContainer.innerHTML = `<p class="catalog-data-message" role="alert">Books could not be loaded. ${String(error.message || "Please try again later.")}</p>`;
+        if (catalogProductsContainer) {
+            const message = document.createElement('p'); message.className = 'catalog-data-message'; message.setAttribute('role', 'alert');
+            message.textContent = `Books could not be loaded. ${String(error.message || 'Please try again later.')}`;
+            catalogProductsContainer.replaceChildren(message);
+        }
         if (featuredShelf) featuredShelf.hidden = true;
         return;
     }
-    if (!books.length) {
-        if (catalogProductsContainer) catalogProductsContainer.innerHTML = '<p class="catalog-data-message">There are no books available yet.</p>';
-        if (featuredShelf) featuredShelf.hidden = true;
-        return;
-    }
-    const categoryOrder = ["Physics", "Chemistry", "Biology", "Arabic", "Mathematics", "Computer Science & IT", "Cybersecurity", "Business & Humanities"];
-    books.sort((a, b) => categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category));
-    try {
+    // Hydrate the reading list separately so it cannot delay the storefront catalogue.
+    (async () => { try {
         const client = await window.supabaseReady;
         const { data: { session } } = await client.auth.getSession();
         const savedBooks = session ? await window.bookStore.getWishlist() : [];
         bookWishlistIds = new Set(savedBooks.map(book => String(book.id)));
-    } catch (error) {
-        bookWishlistIds = new Set();
-    }
-    renderFeaturedBookShelf();
-    updateCartCount();
-    // Update cart count
+        updateWishlistButtons();
+    } catch (_) { bookWishlistIds = new Set(); } })();
     updateCartCount();
 
     // Toggle menu functionality
@@ -660,91 +648,7 @@ document.addEventListener("DOMContentLoaded", async function(){
         }
     });
 
-    // Populate categories dynamically
-    const categories = [...new Set(books.map(book => book.category))];
-    const categoryList = document.getElementById("categoryList");
-    if(categoryList) {
-        categories.forEach((cat, index) => {
-            const li = document.createElement("li");
-            li.textContent = cat;
-            li.style.opacity = "1";
-            li.style.cursor = "pointer";
-            li.onclick = function() {
-                const sideMenu = document.getElementById("sideMenu");
-                const header = document.querySelector(".header");
-                if(sideMenu && header) {
-                    sideMenu.classList.remove("active");
-                    header.classList.remove("menu-open");
-                }
-                filterByCategory(cat);
-            };
-            categoryList.appendChild(li);
-            if(index !== categories.length - 1){
-                const hr = document.createElement("hr");
-                hr.style.border = "0.5px solid rgba(255,255,255,0.3)";
-                categoryList.appendChild(hr);
-            }
-        });
-    }
-
-    // Generate all book cards dynamically
-    const productsContainer = document.querySelector(".products");
-    if(productsContainer){
-        productsContainer.innerHTML = ""; // clear any existing HTML
-        let lastCategory = "";
-        books.forEach((book, index) => {
-            if (book.category !== lastCategory) {
-                const heading = document.createElement("h2");
-                heading.className = "catalog-category-title " + subjectClass(book.category);
-                heading.textContent = book.category;
-                productsContainer.appendChild(heading);
-                lastCategory = book.category;
-            }
-            const card = document.createElement("div");
-            card.classList.add("card", subjectClass(book.category));
-            card.style.opacity = "1";
-
-            // Create stock status badge
-            const stockClass = book.stock > 45
-                ? "stock-very-high"
-                : book.stock > 30
-                    ? "stock-high"
-                    : book.stock > 15
-                        ? "stock-medium"
-                        : book.stock > 5
-                            ? "stock-low"
-                            : book.stock > 0
-                                ? "stock-critical"
-                                : "stock-out";
-            const stockText = book.stock > 0 ? `${book.stock} in stock` : "Out of stock";
-
-            card.style.cursor = "pointer";
-            card.innerHTML = `
-                <div class="card-image-wrapper" onclick="quickAddToCart('${book.name.replace(/'/g, "\\'")}',${book.price},'${book.image}', event)">
-                <img src="${book.image}" alt="${book.name}">
-                    <span class="stock-badge ${stockClass}">${stockText}</span>
-                </div>
-                <div class="card-content">
-                    <h3>${book.name}</h3>
-                    <div class="card-rating">
-                        <span class="stars">${'★'.repeat(Math.floor(book.rating))}</span>
-                        <span class="rating-value">${book.rating}</span>
-                    </div>
-                    <p class="card-category ${subjectClass(book.category)}">${book.category}</p>
-                    <p class="card-price">KES ${book.price.toLocaleString()}</p>
-                    <div class="card-actions">
-                        <button class="home-add-btn" onclick="quickAddToCart('${book.name.replace(/'/g, "\\'")}',${book.price},'${book.image}', event)" ${book.stock === 0 ? 'disabled' : ''}><i class="fas fa-plus"></i> Add</button>
-                        <button class="wishlist-heart-btn ${isProductInWishlist(book.id) ? "liked" : ""}" data-product-id="${book.id}" onclick="toggleWishlistByProductId('${book.id}', event)" title="Like">♡</button>
-                    </div>
-                </div>
-            `;
-            productsContainer.appendChild(card);
-        });
-        
-        // Attach click events after all cards are created
-        attachCardClicks();
-        updateWishlistButtons();
-    }
+    renderCatalog(books);
 
     // Search functionality with smooth filtering
     const searchInput = document.getElementById("searchInput");
@@ -753,71 +657,76 @@ document.addEventListener("DOMContentLoaded", async function(){
             const text = searchInput.value.toLowerCase();
             const cards = document.querySelectorAll(".products .card");
             let visibleCount = 0;
-            
             cards.forEach(card => {
-                const name = card.querySelector("h3").textContent.toLowerCase();
-                const category = card.querySelector(".card-category").textContent.toLowerCase();
-                const price = card.querySelector(".card-price").textContent.toLowerCase();
-                
-                if (name.includes(text) || category.includes(text) || price.includes(text)) {
-                    card.style.display = "flex";
-                    card.style.animation = "fadeIn 0.3s ease";
-                    visibleCount++;
-                } else {
-                    card.style.display = "none";
-                }
+                const name = card.querySelector("h3")?.textContent.toLowerCase() || '';
+                const category = card.querySelector(".card-category")?.textContent.toLowerCase() || '';
+                const price = card.querySelector(".card-price")?.textContent.toLowerCase() || '';
+                card.hidden = !(name.includes(text) || category.includes(text) || price.includes(text));
+                if (!card.hidden) visibleCount++;
             });
             
             document.querySelectorAll(".catalog-category-title").forEach((heading) => {
                 let sibling = heading.nextElementSibling;
                 let hasVisibleBook = false;
                 while (sibling && !sibling.classList.contains("catalog-category-title")) {
-                    if (sibling.classList.contains("card") && sibling.style.display !== "none") hasVisibleBook = true;
+                    if (sibling.classList.contains("card") && !sibling.hidden) hasVisibleBook = true;
                     sibling = sibling.nextElementSibling;
                 }
-                heading.style.display = hasVisibleBook ? "" : "none";
+                heading.hidden = !hasVisibleBook;
             });
             if (visibleCount === 0 && text.length > 0) {
                 showToastNotification("No books found matching your search");
             }
         });
     }
+
+    let refreshTime = Date.now();
+    window.addEventListener('focus', () => {
+        if (Date.now() - refreshTime < 5000) return;
+        refreshTime = Date.now();
+        refreshCatalog();
+    });
 });
+
+async function refreshCatalog() {
+    const searchInput = document.getElementById('searchInput');
+    const previousQuery = searchInput?.value || '';
+    const categoryOrder = ['Physics', 'Chemistry', 'Biology', 'Arabic', 'Mathematics', 'Computer Science & IT', 'Cybersecurity', 'Business & Humanities'];
+    const rank = name => { const index = categoryOrder.indexOf(name); return index < 0 ? categoryOrder.length : index; };
+    books = (await window.bookStore.getProducts()).sort((a, b) => rank(a.category) - rank(b.category) || a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+    populateCategoryMenu();
+    renderCatalog(books);
+    renderFeaturedBookShelf();
+    if (searchInput && previousQuery) {
+        searchInput.value = previousQuery;
+        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+}
 
 // View product details in modal
 function viewBookDetails(index) {
     const book = books[index];
-    const modal = `
-        <div class="product-modal">
-            <div class="product-modal-content">
-                <span class="close" onclick="closeBookModal()">&times;</span>
-                <div class="product-modal-body">
-                    <div class="product-modal-image">
-                        <img src="${book.image}" alt="Cover of ${book.name}" onerror="this.onerror=null;this.src='https://covers.openlibrary.org/b/isbn/${book.isbn}-M.jpg'">
-                    </div>
-                    <div class="product-modal-details">
-                        <h2>${book.name}</h2>
-                        <p class="product-modal-category">Category: ${book.category}</p>
-                        <div class="product-modal-rating">
-                            <span class="stars">${'★'.repeat(Math.floor(book.rating))}</span>
-                            <span>${book.rating}/5</span>
-                        </div>
-                        <p class="product-modal-price">KES ${book.price.toLocaleString()}</p>
-                        <p class="product-modal-stock">${book.stock > 0 ? `${book.stock} in stock` : 'Out of stock'}</p>
-                        <div class="product-modal-actions">
-                            <button class="btn-primary" onclick="quickAddToCartAndOpenCart('${book.name.replace(/'/g, "\\'")}',${book.price},'${book.image}', event);" ${book.stock === 0 ? 'disabled' : ''}>
-                                <i class="fas fa-shopping-cart"></i> Add to Cart
-                            </button>
-                            <a href="product-view.html?id=${encodeURIComponent(book.id)}" class="btn-secondary">
-                                <i class="fas fa-eye"></i> View Details
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    showLightbox(modal);
+    if (!book) return;
+    showLightbox('');
+    const lightbox = document.getElementById('lightbox');
+    const outer = document.createElement('div'); outer.className = 'product-modal';
+    const panel = document.createElement('div'); panel.className = 'product-modal-content';
+    const close = document.createElement('button'); close.className = 'close'; close.type = 'button'; close.setAttribute('aria-label', 'Close details'); close.textContent = '×'; close.addEventListener('click', closeBookModal);
+    const body = document.createElement('div'); body.className = 'product-modal-body';
+    const cover = document.createElement('div'); cover.className = 'product-modal-image';
+    const image = document.createElement('img'); image.src = safeImageUrl(book.image) || (book.isbn ? `https://covers.openlibrary.org/b/isbn/${encodeURIComponent(book.isbn)}-M.jpg` : ''); image.alt = `Cover of ${book.name}`; image.loading = 'lazy'; cover.appendChild(image);
+    const details = document.createElement('div'); details.className = 'product-modal-details';
+    const title = document.createElement('h2'); title.textContent = book.name;
+    const category = document.createElement('p'); category.className = 'product-modal-category'; category.textContent = `Category: ${book.category}`;
+    const rating = document.createElement('p'); rating.className = 'product-modal-rating'; rating.textContent = `${'★'.repeat(Math.max(0, Math.min(5, Math.floor(Number(book.rating) || 0))))} ${Number(book.rating) || 0}/5`;
+    const price = document.createElement('p'); price.className = 'product-modal-price'; price.textContent = `KES ${(Number(book.price) || 0).toLocaleString()}`;
+    const stock = document.createElement('p'); stock.className = 'product-modal-stock'; stock.textContent = Number(book.stock) > 0 ? `${book.stock} in stock` : 'Out of stock';
+    const actions = document.createElement('div'); actions.className = 'product-modal-actions';
+    const add = document.createElement('button'); add.className = 'btn-primary'; add.type = 'button'; add.disabled = Number(book.stock) < 1; add.textContent = 'Add to Cart';
+    add.addEventListener('click', event => quickAddToCartAndOpenCart(book.name, book.price, book.image, event));
+    const link = document.createElement('a'); link.href = `product-view.html?id=${encodeURIComponent(book.id)}`; link.className = 'btn-secondary'; link.textContent = 'View Details';
+    actions.append(add, link); details.append(title, category, rating, price, stock, actions); body.append(cover, details); panel.append(close, body); outer.appendChild(panel);
+    lightbox.replaceChildren(outer);
 }
 
 function closeBookModal() {

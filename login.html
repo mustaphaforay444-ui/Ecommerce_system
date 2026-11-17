@@ -526,9 +526,8 @@
                 try {
                     if (!window.bookStore) throw new Error('The account service is unavailable. Please try again shortly.');
                     await window.bookStore.signIn(email, password);
-                    await window.bookStore.currentProfile();
                     document.getElementById('successMessage').style.display = 'block';
-                    setTimeout(() => { window.location.href = destinationAfterAuth(); }, 900);
+                    window.location.replace(destinationAfterAuth());
                 } catch (error) {
                     document.getElementById('loginPasswordError').textContent = error.message || 'Unable to sign in.';
                 }
