@@ -118,7 +118,7 @@ async function loadBookReviews() {
         if (!reviews.length) { container.textContent = 'No approved reviews yet.'; return; }
         reviews.forEach(review => {
             const article = document.createElement('article'); article.className = 'product-review';
-            const heading = document.createElement('strong'); heading.textContent = `${'★'.repeat(Number(review.rating))} ${review.profiles?.full_name || 'Reader'}`;
+            const heading = document.createElement('strong'); heading.textContent = `${'★'.repeat(Number(review.rating))} Reader`;
             const body = document.createElement('p'); body.textContent = review.body;
             const date = document.createElement('time'); date.dateTime = review.created_at; date.textContent = new Date(review.created_at).toLocaleDateString();
             article.append(heading, body, date); container.appendChild(article);

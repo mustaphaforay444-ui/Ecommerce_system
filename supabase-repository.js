@@ -189,7 +189,7 @@ window.bookStore = {
   async sendPasswordReset(email) {
     const client = await db();
     return unwrap(await client.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login.html?type=recovery`
+      redirectTo: `${window.location.origin}/login.html`
     }));
   },
 
@@ -204,6 +204,29 @@ window.bookStore = {
     if (error) throw error;
     if (!user) return null;
     return unwrap(await client.from('profiles').select('*').eq('id', user.id).single());
+  },
+
+  async updateMyProfile({ full_name, phone }) {
+    const client = await db();
+    return unwrap(await client.from('profiles').update({ full_name: full_name.trim(), phone: phone.trim() || null }).select().single());
+  },
+
+  async getCustomerMessages() {
+    const client = await db();
+    return unwrap(await client.from('customer_messages').select('id, customer_id, sender_id, body, created_at').order('created_at', { ascending: true }));
+  },
+
+  async sendCustomerMessage(body, customerId) {
+    const client = await db();
+    const { data: { user }, error } = await client.auth.getUser();
+    if (error) throw error;
+    if (!user) throw new Error('Sign in before sending a message.');
+    return unwrap(await client.from('customer_messages').insert({ customer_id: customerId || user.id, sender_id: user.id, body: body.trim() }).select().single());
+  },
+
+  async getAdminCustomerMessages(customerId) {
+    const client = await db();
+    return unwrap(await client.from('customer_messages').select('id, customer_id, sender_id, body, created_at').eq('customer_id', customerId).order('created_at', { ascending: true }));
   },
 
   async getCart() {
@@ -231,14 +254,16 @@ window.bookStore = {
     return this.setCartQuantity(productId, Number(existing?.quantity || 0) + Number(amount || 1));
   },
 
-  async placeOrder({ items, deliveryType, deliveryFee, deliveryAddress }) {
+  async placeOrder({ items, deliveryType, deliveryFee, deliveryAddress, requestedFulfillmentAt }) {
     const client = await db();
-    return unwrap(await client.rpc('place_order', {
+    const parameters = {
       p_items: items.map(item => ({ product_id: item.id, quantity: item.quantity })),
       p_delivery_type: deliveryType,
       p_delivery_fee: deliveryFee,
       p_delivery_address: deliveryAddress || null
-    }));
+    };
+    if (requestedFulfillmentAt) parameters.p_requested_fulfillment_at = requestedFulfillmentAt;
+    return unwrap(await client.rpc('place_order', parameters));
   },
 
   async getMyOrders() {
@@ -273,7 +298,7 @@ window.bookStore = {
   async getProductReviews(productId) {
     const client = await db();
     return unwrap(await client.from('reviews')
-      .select('id, rating, body, created_at, profiles(full_name)')
+      .select('id, rating, body, created_at')
       .eq('product_id', productId).eq('status', 'approved').order('created_at', { ascending: false }));
   },
 

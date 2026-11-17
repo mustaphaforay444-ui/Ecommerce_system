@@ -30,11 +30,18 @@
                 <li><a href="index.html" class="nav-link active" data-section="home">Home</a></li>
                 <li><a href="about.html" class="nav-link" data-section="about">About</a></li>
                 <li><a href="contact.html" class="nav-link" data-section="contact">Contact</a></li>
-                <li><a href="login.html" class="nav-link">Sign In</a></li>
-                <li><a href="login.html#signup" class="nav-link">Register</a></li>
-                <li><a href="cart.html" class="nav-link">Book Cart <span class="nav-cart-count" id="cart-count">0</span></a></li>
-                <li><a href="wishlist.html" class="nav-link">Reading List</a></li>
-                <li><a href="orders.html" class="nav-link">My Orders</a></li>
+                <li class="account-menu" id="accountMenu">
+                    <details>
+                        <summary id="accountMenuSummary">Register</summary>
+                        <div class="account-menu-panel">
+                            <a id="registerMenuLink" href="login.html#signup">Create customer account</a>
+                            <a id="loginMenuLink" href="login.html">Customer login</a>
+                            <a id="customerPortalMenuLink" href="customer-portal.html" hidden>My customer portal</a>
+                            <a id="adminPortalMenuLink" href="admin.html" hidden>Admin portal</a>
+                            <button id="signOutMenuButton" type="button" hidden>Sign out</button>
+                        </div>
+                    </details>
+                </li>
             </ul>
         </nav>
     </div>

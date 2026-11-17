@@ -33,7 +33,11 @@ function renderOrder(order) {
   const items = document.createElement('ul'); items.className = 'order-lines';
   (order.order_items || []).forEach(item => { const li = document.createElement('li'); li.textContent = `${item.title_snapshot} × ${item.quantity} — KES ${(Number(item.unit_price) * Number(item.quantity)).toLocaleString()}`; items.appendChild(li); });
   const location = document.createElement('p'); location.textContent = order.delivery_address ? `Delivery location: ${order.delivery_address}` : `Delivery: ${order.delivery_type}`;
+  const schedule = document.createElement('p');
+  schedule.textContent = order.requested_fulfillment_at
+    ? `Requested time: ${new Date(order.requested_fulfillment_at).toLocaleString()}`
+    : 'Requested time: As soon as possible';
   const total = document.createElement('strong'); total.textContent = `Total: KES ${Number(order.total).toLocaleString()} · Payment: ${(order.payment_status || 'unpaid').replaceAll('_', ' ')}`;
-  article.append(head, items, location, total); return article;
+  article.append(head, items, schedule, location, total); return article;
 }
 window.loadOrders = loadOrders;

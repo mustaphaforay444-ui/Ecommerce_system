@@ -141,6 +141,53 @@ ul {
     border-bottom-color: #a8d8ff;
 }
 
+.storefront-page .account-menu details { position: relative; }
+.storefront-page .account-menu summary {
+    list-style: none;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 8px 2px;
+    white-space: nowrap;
+}
+.storefront-page .account-menu summary::-webkit-details-marker { display: none; }
+.storefront-page .account-menu summary::after { content: ' ▾'; font-size: .85em; }
+.storefront-page .account-menu-panel {
+    position: absolute;
+    z-index: 1200;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 210px;
+    padding: 7px;
+    display: grid;
+    gap: 3px;
+    background: white;
+    border: 1px solid #d7e3ec;
+    border-radius: 9px;
+    box-shadow: 0 10px 28px #001c3440;
+}
+.storefront-page .account-menu-panel a,
+.storefront-page .account-menu-panel button {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    color: #17446a;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    text-align: left;
+    text-decoration: none;
+    font: inherit;
+    font-size: .93rem;
+    cursor: pointer;
+}
+.storefront-page .account-menu-panel a:hover,
+.storefront-page .account-menu-panel button:hover { background: #eaf5fb; color: #006da8; transform: none; }
+.storefront-page .account-menu-panel [hidden] { display: none; }
+.storefront-page .account-menu summary:focus-visible,
+.storefront-page .account-menu-panel a:focus-visible,
+.storefront-page .account-menu-panel button:focus-visible { outline: 3px solid #a8d8ff; outline-offset: 2px; }
+
 /* Use phone-style navigation on all devices */
 .header-nav {
     display: none;

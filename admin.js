@@ -5,6 +5,7 @@ let buyers = [];
 let editingId = null;
 let editingCategoryId = null;
 let adminOrdersChannel = null;
+let adminMessagesChannel = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('categoryName')?.addEventListener('input', event => {
@@ -13,10 +14,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     document.getElementById('ordersSearch')?.addEventListener('input', renderOrdersTable);
     document.getElementById('ordersStatusFilter')?.addEventListener('change', renderOrdersTable);
+    document.getElementById('messageCustomerSelect')?.addEventListener('change', loadAdminMessages);
+    document.getElementById('adminMessageForm')?.addEventListener('submit', sendAdminMessage);
     try {
         await window.supabaseReady;
         await window.bookStore.currentProfile();
         subscribeToAdminOrderUpdates(await window.supabaseReady);
+        subscribeToAdminMessageUpdates(await window.supabaseReady);
         await Promise.all([loadDashboard(), populateCategories(), loadCategoriesTable(), loadBooksTable(), loadOrdersTable(), loadBuyersTable()]);
     } catch (error) { showPageError(error.message || 'Admin data could not be loaded.'); }
 });
@@ -33,6 +37,14 @@ function subscribeToAdminOrderUpdates(client) {
                 showPageError('Live order updates are unavailable. Refresh the page to check for changes.');
             }
         });
+}
+
+function subscribeToAdminMessageUpdates(client) {
+    if (adminMessagesChannel) return;
+    adminMessagesChannel = client.channel('admin-customer-message-updates')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'customer_messages' }, () => {
+            if (document.getElementById('messages')?.classList.contains('active')) loadAdminMessages();
+        }).subscribe();
 }
 
 function showPageError(message) {
@@ -56,6 +68,7 @@ function showSection(sectionId, navEl) {
     if (sectionId === 'products') loadBooksTable();
     if (sectionId === 'orders') loadOrdersTable();
     if (sectionId === 'buyers') loadBuyersTable();
+    if (sectionId === 'messages') loadMessageCustomers();
     if (sectionId === 'sales') loadSalesReport();
     if (sectionId === 'reviews') loadReviewsTable();
 }
@@ -229,8 +242,9 @@ function renderOrdersTable() {
     if (!visibleOrders.length) { tbody.innerHTML = '<tr><td colspan="7">No orders match these filters.</td></tr>'; return; }
     visibleOrders.forEach(order => {
         const row = document.createElement('tr');
-        const cells = [order.id, new Date(order.created_at).toLocaleString(), order.profiles?.full_name || order.profiles?.email || 'Buyer', order.delivery_address || '—', String(order.order_items?.length || 0), `KES ${Number(order.total || 0).toLocaleString()}`];
-        cells.forEach((value, index) => { const td = document.createElement('td'); td.textContent = value; if (index === 3) td.className = 'delivery-location-cell'; row.appendChild(td); });
+        const requestedAt = order.requested_fulfillment_at ? `\nRequested: ${new Date(order.requested_fulfillment_at).toLocaleString()}` : '';
+        const cells = [order.id, new Date(order.created_at).toLocaleString() + requestedAt, order.profiles?.full_name || order.profiles?.email || 'Buyer', order.delivery_address || '—', String(order.order_items?.length || 0), `KES ${Number(order.total || 0).toLocaleString()}`];
+        cells.forEach((value, index) => { const td = document.createElement('td'); td.textContent = value; if (index === 1) td.className = 'order-date-cell'; if (index === 3) td.className = 'delivery-location-cell'; row.appendChild(td); });
         const td = document.createElement('td'); const select = document.createElement('select'); select.className = 'order-status-select';
         ['pending_payment', 'processing', 'shipped', 'delivered', 'cancelled'].forEach(status => select.add(new Option(status.replaceAll('_', ' '), status)));
         select.value = order.status || 'pending_payment'; select.addEventListener('change', () => updateOrderStatus(order.id, select.value)); td.appendChild(select); row.appendChild(td); tbody.appendChild(row);
@@ -255,6 +269,48 @@ async function loadBuyersTable() {
     });
 }
 window.loadBuyersTable = loadBuyersTable;
+
+async function loadMessageCustomers() {
+    const select = document.getElementById('messageCustomerSelect'); if (!select) return;
+    try {
+        const previous = select.value;
+        buyers = await window.bookStore.getAdminCustomers();
+        select.replaceChildren(new Option('Select a customer', ''));
+        buyers.forEach(buyer => select.add(new Option(`${buyer.full_name || 'Customer'} · ${buyer.email || buyer.id}`, buyer.id)));
+        if (previous) select.value = previous;
+        if (select.value) await loadAdminMessages();
+    } catch (error) { showPageError(error.message || 'Customer list could not be loaded.'); }
+}
+
+async function loadAdminMessages() {
+    const customerId = document.getElementById('messageCustomerSelect')?.value;
+    const list = document.getElementById('adminMessageList'); if (!list) return;
+    if (!customerId) { list.textContent = 'Select a customer to view messages.'; return; }
+    try {
+        const messages = await window.bookStore.getAdminCustomerMessages(customerId);
+        list.replaceChildren();
+        if (!messages.length) list.textContent = 'No messages yet. Send a reply to start the conversation.';
+        messages.forEach(message => {
+            const bubble = document.createElement('div'); bubble.className = `admin-message-bubble${message.sender_id === customerId ? '' : ' admin'}`;
+            bubble.textContent = `${message.sender_id === customerId ? 'Customer' : 'Reader’s Corner'}: ${message.body} · ${new Date(message.created_at).toLocaleString()}`;
+            list.appendChild(bubble);
+        });
+        list.scrollTop = list.scrollHeight;
+    } catch (error) { list.textContent = error.message || 'Messages could not be loaded.'; }
+}
+
+async function sendAdminMessage(event) {
+    event.preventDefault();
+    const customerId = document.getElementById('messageCustomerSelect')?.value;
+    const input = document.getElementById('adminMessageText'); const button = event.currentTarget.querySelector('button');
+    if (!customerId) { showPageError('Choose a customer before replying.'); return; }
+    const body = input.value.trim(); if (!body) return;
+    button.disabled = true;
+    try { await window.bookStore.sendCustomerMessage(body, customerId); input.value = ''; await loadAdminMessages(); }
+    catch (error) { showPageError(error.message || 'Reply could not be sent.'); }
+    finally { button.disabled = false; }
+}
+
 async function loadSalesReport() {
     const tbody = document.getElementById('salesTableBody'); if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="3">Loading verified sales…</td></tr>';

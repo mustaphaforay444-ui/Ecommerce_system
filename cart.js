@@ -216,6 +216,12 @@ async function checkout() {
     const deliveryAddress = deliveryFee > 0
         ? (document.getElementById('deliveryAddress')?.value || '').trim()
         : '';
+    const requestedValue = document.getElementById('requestedFulfillmentAt')?.value || '';
+    const requestedFulfillmentAt = requestedValue ? new Date(requestedValue).toISOString() : null;
+    if (requestedValue && new Date(requestedValue).getTime() <= Date.now()) {
+        alert('Choose a future date and time, or leave this blank for the soonest available order.');
+        return;
+    }
 
     if (deliveryFee > 0 && !deliveryAddress) {
         alert('Please enter the location where you want your books delivered.');
@@ -237,7 +243,8 @@ async function checkout() {
             items: currentCart.map(item => ({ id: item.productId, quantity: item.quantity })),
             deliveryType,
             deliveryFee,
-            deliveryAddress
+            deliveryAddress,
+            requestedFulfillmentAt
         });
         const orderId = order.order_id || order.id || 'placed';
         alert(`Order received (${orderId}). Payment is still pending; no payment has been processed. Your order and delivery details are saved.`);

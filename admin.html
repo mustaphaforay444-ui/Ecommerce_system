@@ -30,14 +30,14 @@
             <a href="#" class="nav-item" onclick="showSection('buyers', this); return false;">
                 <i class="fas fa-users"></i> All Buyers
             </a>
+            <a href="#" class="nav-item" onclick="showSection('messages', this); return false;">
+                <i class="fas fa-comments"></i> Customer Messages
+            </a>
             <a href="#" class="nav-item" onclick="showSection('sales', this); return false;">
                 <i class="fas fa-chart-bar"></i> Sales Report
             </a>
             <a href="#" class="nav-item" onclick="showSection('reviews', this); return false;">
                 <i class="fas fa-star"></i> Reviews
-            </a>
-            <a href="index.html" class="nav-item logout">
-                <i class="fas fa-sign-out-alt"></i> Back to Site
             </a>
             <a href="admin-login.html" class="nav-item logout" onclick="logoutAdmin(event)">
                 <i class="fas fa-lock"></i> Admin Sign Out
@@ -230,6 +230,19 @@
                     </thead>
                     <tbody id="buyersTableBody"></tbody>
                 </table>
+            </div>
+        </section>
+
+        <section id="messages" class="section">
+            <div class="section-header"><h1>Customer Messages</h1></div>
+            <p class="admin-help-note">Choose a customer to read and reply to their portal messages.</p>
+            <div class="admin-message-layout">
+                <label>Customer<select id="messageCustomerSelect"><option value="">Select a customer</option></select></label>
+                <div id="adminMessageList" class="admin-message-list" aria-live="polite">Select a customer to view messages.</div>
+                <form id="adminMessageForm" class="admin-message-compose">
+                    <textarea id="adminMessageText" maxlength="2000" required placeholder="Write a reply…"></textarea>
+                    <button class="btn btn-primary" type="submit">Send reply</button>
+                </form>
             </div>
         </section>
 

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Customer Portal - Reader’s Corner</title>
+  <script type="module" src="supabase-client.js"></script><script type="module" src="supabase-repository.js"></script>
+  <link rel="stylesheet" href="customer-portal.css">
+</head>
+<body>
+  <div class="portal-layout">
+    <aside class="portal-sidebar">
+      <a class="portal-brand" href="index.html">Reader’s Corner</a>
+      <p class="portal-caption">CUSTOMER PORTAL</p>
+      <nav class="portal-nav" aria-label="Customer portal">
+        <button class="portal-nav-link active" data-view="account">My Account</button>
+        <button class="portal-nav-link" data-view="orders">My Orders</button>
+        <button class="portal-nav-link" data-view="reading">My Reading List</button>
+        <button class="portal-nav-link" data-view="cart">My Cart</button>
+        <button class="portal-nav-link" data-view="messages">Messages <span id="unreadMessages"></span></button>
+      </nav>
+      <a class="portal-signout" href="#sign-out" id="signOut">Sign Out</a>
+    </aside>
+    <main class="portal-main">
+      <header class="portal-top"><div><a href="index.html">← Back to bookstore</a><p id="portalGreeting">Welcome</p></div><span id="portalEmail"></span></header>
+      <p id="portalNotice" class="portal-notice" role="status">Loading your portal…</p>
+      <section class="portal-view active" id="view-account">
+        <div class="section-title"><div><p class="eyebrow">YOUR DETAILS</p><h1>My Account</h1><p>Keep your contact details up to date.</p></div></div>
+        <form id="profileForm" class="portal-card profile-form">
+          <label>Full name<input id="profileName" required maxlength="120"></label>
+          <label>Email<input id="profileEmail" type="email" readonly></label>
+          <label>Phone number<input id="profilePhone" type="tel" maxlength="40"></label>
+          <button class="portal-button" type="submit">Save details</button>
+        </form>
+        <div class="quick-links"><button data-open="orders">Track my orders</button><button data-open="cart">Go to my cart</button><button data-open="messages">Message the bookstore</button></div>
+      </section>
+      <section class="portal-view" id="view-orders"><div class="section-title"><div><p class="eyebrow">PURCHASES</p><h1>My Orders</h1><p>See your requested time, delivery details, and order progress.</p></div><a class="portal-button" href="index.html#bookCatalog">Browse books</a></div><iframe title="My orders" src="orders.html"></iframe></section>
+      <section class="portal-view" id="view-reading"><div class="section-title"><div><p class="eyebrow">SAVED BOOKS</p><h1>My Reading List</h1></div><a class="portal-button" href="index.html#bookCatalog">Browse books</a></div><iframe title="My reading list" src="wishlist.html"></iframe></section>
+      <section class="portal-view" id="view-cart"><div class="section-title"><div><p class="eyebrow">CHECKOUT</p><h1>My Cart</h1><p>Choose when you want your order ready or delivered.</p></div></div><iframe title="My cart and checkout" src="cart.html"></iframe></section>
+      <section class="portal-view" id="view-messages"><div class="section-title"><div><p class="eyebrow">BOOKSTORE SUPPORT</p><h1>Messages</h1><p>Send a message to the bookstore team and read their replies here.</p></div></div><div class="portal-card chat-card"><div id="messageList" class="message-list" aria-live="polite"></div><form id="messageForm" class="message-compose"><textarea id="messageText" maxlength="2000" required placeholder="Write a message…"></textarea><button class="portal-button" type="submit">Send message</button></form></div></section>
+    </main>
+  </div>
+  <script src="customer-portal.js" defer></script>
+</body>
+</html>
