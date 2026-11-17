@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (editingCategoryId) return;
         document.getElementById('categorySlug').value = event.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     });
+    document.getElementById('ordersSearch')?.addEventListener('input', renderOrdersTable);
+    document.getElementById('ordersStatusFilter')?.addEventListener('change', renderOrdersTable);
     try {
         await window.supabaseReady;
         await window.bookStore.currentProfile();
@@ -211,9 +213,21 @@ window.loadBooksTable = loadBooksTable;
 async function loadOrdersTable() {
     const tbody = document.getElementById('ordersTableBody'); if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="7">Loading orders…</td></tr>';
-    orders = await window.bookStore.getAdminOrders(); tbody.replaceChildren();
+    orders = await window.bookStore.getAdminOrders();
+    renderOrdersTable();
+}
+function renderOrdersTable() {
+    const tbody = document.getElementById('ordersTableBody'); if (!tbody) return;
+    tbody.replaceChildren();
     if (!orders.length) { tbody.innerHTML = '<tr><td colspan="7">No orders yet.</td></tr>'; return; }
-    orders.forEach(order => {
+    const term = (document.getElementById('ordersSearch')?.value || '').trim().toLowerCase();
+    const status = document.getElementById('ordersStatusFilter')?.value || '';
+    const visibleOrders = orders.filter(order => {
+        const searchable = [order.id, order.profiles?.full_name, order.profiles?.email, order.delivery_address].join(' ').toLowerCase();
+        return (!term || searchable.includes(term)) && (!status || order.status === status);
+    });
+    if (!visibleOrders.length) { tbody.innerHTML = '<tr><td colspan="7">No orders match these filters.</td></tr>'; return; }
+    visibleOrders.forEach(order => {
         const row = document.createElement('tr');
         const cells = [order.id, new Date(order.created_at).toLocaleString(), order.profiles?.full_name || order.profiles?.email || 'Buyer', order.delivery_address || '—', String(order.order_items?.length || 0), `KES ${Number(order.total || 0).toLocaleString()}`];
         cells.forEach((value, index) => { const td = document.createElement('td'); td.textContent = value; if (index === 3) td.className = 'delivery-location-cell'; row.appendChild(td); });

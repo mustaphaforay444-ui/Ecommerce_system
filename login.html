@@ -322,7 +322,7 @@
             <!-- Login Form -->
             <div class="auth-form" id="loginForm">
                 <h2>Welcome Back</h2>
-                <p class="auth-note">Customer sign-in is for your bookstore account. This demo currently saves account details in this browser; it does not verify passwords with a server.</p>
+                <p class="auth-note">Sign in securely to your bookstore account. Your account and profile are managed by Supabase.</p>
                 <div class="success-message" id="successMessage">Login successful! Redirecting...</div>
                 
                 <div class="form-group">
@@ -337,11 +337,6 @@
                     <span class="error-message" id="loginPasswordError"></span>
                 </div>
 
-                <div class="checkbox-row">
-                    <input type="checkbox" id="rememberMe">
-                    <label for="rememberMe">Remember me</label>
-                </div>
-
                 <button class="btn btn-primary" onclick="handleLogin()">Sign In</button>
                 <button class="btn btn-secondary" onclick="toggleForms()">Create New Account</button>
 
@@ -350,7 +345,7 @@
                 </div>
                 <div class="forgot-password-panel" id="forgotPasswordPanel">
                     <h4>Password reset request</h4>
-                    <p>This demo records a reset request in this browser. It does not send an email.</p>
+                    <p>We’ll email a secure link so you can reset your password.</p>
                     <div class="form-group">
                         <label for="forgotEmail">Account Email</label>
                         <input type="email" id="forgotEmail" placeholder="your@email.com">
@@ -360,6 +355,19 @@
                         <button class="btn btn-primary" onclick="handleForgotPassword()">Request Reset</button>
                         <button class="btn btn-secondary" onclick="hideForgotPassword()">Close</button>
                     </div>
+                </div>
+                <div class="forgot-password-panel" id="passwordUpdatePanel">
+                    <h4>Choose a new password</h4>
+                    <div class="form-group">
+                        <label for="newPassword">New password</label>
+                        <input type="password" id="newPassword" minlength="8" autocomplete="new-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmNewPassword">Confirm new password</label>
+                        <input type="password" id="confirmNewPassword" minlength="8" autocomplete="new-password" required>
+                    </div>
+                    <span class="error-message" id="passwordUpdateError"></span>
+                    <button class="btn btn-primary" type="button" onclick="handlePasswordUpdate()">Update Password</button>
                 </div>
             </div>
 
@@ -442,6 +450,30 @@
             document.getElementById('forgotEmailError').textContent = '';
         }
 
+        function destinationAfterAuth() {
+            const next = new URLSearchParams(window.location.search).get('next');
+            return ['cart.html', 'orders.html', 'wishlist.html'].includes(next) ? next : 'index.html';
+        }
+
+        async function handlePasswordUpdate() {
+            const password = document.getElementById('newPassword').value;
+            const confirmation = document.getElementById('confirmNewPassword').value;
+            const message = document.getElementById('passwordUpdateError');
+            message.className = 'error-message';
+            message.textContent = '';
+            if (password.length < 8) { message.textContent = 'Password must be at least 8 characters.'; return; }
+            if (password !== confirmation) { message.textContent = 'Passwords do not match.'; return; }
+            try {
+                await window.bookStore.updatePassword(password);
+                message.className = 'success-message';
+                message.style.display = 'block';
+                message.textContent = 'Password updated. Redirecting…';
+                setTimeout(() => { window.location.href = 'index.html'; }, 900);
+            } catch (error) {
+                message.textContent = error.message || 'Password could not be updated.';
+            }
+        }
+
         async function handleForgotPassword() {
             clearErrors();
             const email = document.getElementById('forgotEmail').value.trim();
@@ -465,13 +497,16 @@
 
         async function handleLogin() {
             clearErrors();
-            const email = document.getElementById('loginEmail').value;
+            const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
 
             // Validation
             let isValid = true;
             if (!email) {
                 document.getElementById('loginEmailError').textContent = 'Email is required';
+                isValid = false;
+            } else if (!isValidEmail(email)) {
+                document.getElementById('loginEmailError').textContent = 'Enter a valid email address';
                 isValid = false;
             }
             if (!password) {
@@ -482,10 +517,10 @@
             if (isValid) {
                 try {
                     if (!window.bookStore) throw new Error('The account service is unavailable. Please try again shortly.');
-                    const result = await window.bookStore.signIn(email.trim(), password);
-                    const profile = await window.bookStore.currentProfile();
+                    await window.bookStore.signIn(email, password);
+                    await window.bookStore.currentProfile();
                     document.getElementById('successMessage').style.display = 'block';
-                    setTimeout(() => { window.location.href = 'index.html'; }, 900);
+                    setTimeout(() => { window.location.href = destinationAfterAuth(); }, 900);
                 } catch (error) {
                     document.getElementById('loginPasswordError').textContent = error.message || 'Unable to sign in.';
                 }
@@ -494,9 +529,9 @@
 
         async function handleSignup() {
             clearErrors();
-            const name = document.getElementById('signupName').value;
-            const email = document.getElementById('signupEmail').value;
-            const phone = document.getElementById('signupPhone').value;
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const phone = document.getElementById('signupPhone').value.trim();
             const password = document.getElementById('signupPassword').value;
             const confirmPassword = document.getElementById('signupConfirmPassword').value;
 
@@ -529,12 +564,12 @@
             if (isValid) {
                 try {
                     if (!window.bookStore) throw new Error('The account service is unavailable. Please try again shortly.');
-                    const result = await window.bookStore.signUp({ name, email: email.trim(), phone: phone.trim(), password });
+                    const result = await window.bookStore.signUp({ name, email, phone, password });
                     if (result.session) {
-                        const profile = await window.bookStore.currentProfile();
+                        await window.bookStore.currentProfile();
                         document.getElementById('signupSuccessMessage').textContent = 'Account created successfully.';
                         document.getElementById('signupSuccessMessage').style.display = 'block';
-                        setTimeout(() => { window.location.href = 'index.html'; }, 900);
+                        setTimeout(() => { window.location.href = destinationAfterAuth(); }, 900);
                     } else {
                         document.getElementById('signupSuccessMessage').textContent = 'Account created. Check your email to confirm your account before signing in.';
                         document.getElementById('signupSuccessMessage').style.display = 'block';
@@ -553,11 +588,21 @@
         // Check the actual Supabase session instead of trusting browser-saved login flags.
         window.addEventListener('load', async () => {
             if (window.location.hash === '#signup') toggleForms();
+            const recoveryHash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+            const recoveryType = recoveryHash.get('type') || new URLSearchParams(window.location.search).get('type');
+            if (recoveryType === 'recovery') {
+                const form = document.getElementById('loginForm');
+                const updatePanel = document.getElementById('passwordUpdatePanel');
+                for (const child of form.children) if (child !== updatePanel) child.hidden = true;
+                updatePanel.style.display = 'block';
+                document.getElementById('newPassword').focus();
+                return;
+            }
             try {
                 if (window.supabaseReady) {
                     const client = await window.supabaseReady;
                     const { data: { session } } = await client.auth.getSession();
-                    if (session) window.location.href = 'index.html';
+                    if (session) window.location.href = destinationAfterAuth();
                 }
             } catch (error) {
                 document.getElementById('loginPasswordError').textContent = error.message || 'Account service is unavailable.';
@@ -571,6 +616,10 @@
                     const forgotVisible = document.getElementById('forgotPasswordPanel').style.display === 'block';
                     if (forgotVisible) {
                         handleForgotPassword();
+                        return;
+                    }
+                    if (document.getElementById('passwordUpdatePanel').style.display === 'block') {
+                        handlePasswordUpdate();
                         return;
                     }
                     if (!document.getElementById('loginForm').classList.contains('form-hidden')) {

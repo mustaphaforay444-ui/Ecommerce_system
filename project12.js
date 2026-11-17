@@ -808,7 +808,7 @@ function viewBookDetails(index) {
                             <button class="btn-primary" onclick="quickAddToCartAndOpenCart('${book.name.replace(/'/g, "\\'")}',${book.price},'${book.image}', event);" ${book.stock === 0 ? 'disabled' : ''}>
                                 <i class="fas fa-shopping-cart"></i> Add to Cart
                             </button>
-                            <a href="product-view.html?id=${index}" class="btn-secondary">
+                            <a href="product-view.html?id=${encodeURIComponent(book.id)}" class="btn-secondary">
                                 <i class="fas fa-eye"></i> View Details
                             </a>
                         </div>

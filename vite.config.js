@@ -9,7 +9,7 @@ const htmlEntries = fs.readdirSync(root)
   .map(name => path.resolve(root, name));
 
 function copyClassicPageScripts() {
-  const scripts = ['admin.js', 'cart.js', 'contact.js', 'orders.js', 'project12.js', 'product-view.js', 'wishlist.js'];
+  const scripts = ['admin.js', 'cart.js', 'contact.js', 'customer-session.js', 'orders.js', 'project12.js', 'product-view.js', 'wishlist.js'];
   return {
     name: 'readers-corner-classic-page-scripts',
     apply: 'build',

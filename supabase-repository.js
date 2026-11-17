@@ -189,8 +189,13 @@ window.bookStore = {
   async sendPasswordReset(email) {
     const client = await db();
     return unwrap(await client.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login.html`
+      redirectTo: `${window.location.origin}/login.html?type=recovery`
     }));
+  },
+
+  async updatePassword(password) {
+    const client = await db();
+    return unwrap(await client.auth.updateUser({ password }));
   },
 
   async currentProfile() {

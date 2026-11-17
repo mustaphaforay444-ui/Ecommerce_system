@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 let currentCart = [];
 let databaseWishlist = new Set();
+let checkoutInProgress = false;
 
 function resolveImagePath(path) {
     const raw = String(path || "").trim();
@@ -202,6 +203,7 @@ function setupDeliveryOptions() {
 
 // Checkout
 async function checkout() {
+    if (checkoutInProgress) return;
     if(currentCart.length === 0) {
         alert('Your cart is empty');
         return;
@@ -221,6 +223,9 @@ async function checkout() {
         return;
     }
 
+    checkoutInProgress = true;
+    const checkoutButton = document.querySelector('.btn-checkout');
+    if (checkoutButton) checkoutButton.disabled = true;
     try {
         await window.supabaseReady;
         const buyer = await getCheckoutUser();
@@ -239,6 +244,9 @@ async function checkout() {
         await loadCart();
     } catch (error) {
         alert(error.message || 'We could not place your order. Please try again.');
+    } finally {
+        checkoutInProgress = false;
+        if (checkoutButton) checkoutButton.disabled = false;
     }
 }
 

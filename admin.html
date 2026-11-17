@@ -173,6 +173,23 @@
             <div class="section-header">
                 <h1>Manage Orders</h1>
             </div>
+            <div class="form-row" aria-label="Search and filter orders">
+                <div class="form-group">
+                    <label for="ordersSearch">Search orders</label>
+                    <input type="search" id="ordersSearch" placeholder="Order ID, customer, or delivery location">
+                </div>
+                <div class="form-group">
+                    <label for="ordersStatusFilter">Filter by status</label>
+                    <select id="ordersStatusFilter">
+                        <option value="">All statuses</option>
+                        <option value="pending_payment">Pending payment</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </div>
             <div class="table-container">
                 <table id="ordersTable">
                     <thead>
