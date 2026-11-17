@@ -1,0 +1,305 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Reader’s Corner</title>
+    <link rel="stylesheet" href="contact.css">
+    <link rel="stylesheet" href="project.css">
+    <script src="contact.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+    <div class="header-left">
+        <div class="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <h1>Reader’s Corner</h1>
+    </div>
+
+    <div class="header-right">
+        <nav class="header-nav">
+            <ul>
+                <li><a href="index.html" class="nav-link" data-section="home"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="about.html" class="nav-link" data-section="about"><i class="fas fa-info-circle"></i> About</a></li>
+                <li><a href="contact.html" class="nav-link active" data-section="contact"><i class="fas fa-envelope"></i> Contact</a></li>
+                <li><a href="login.html" class="nav-link" data-section="signin"><i class="fas fa-sign-in-alt"></i> Sign In</a></li>
+            </ul>
+        </nav>
+
+        <div class="cart-icon" onclick="window.location.href='cart.html'">
+            <i class="fas fa-shopping-cart"></i>
+            <span id="cart-count">0</span>
+        </div>
+    </div>
+</header>
+
+<!-- SIDE MENU -->
+<aside class="side-menu" id="sideMenu">
+    <h3><i class="fas fa-bars"></i> Menu</h3>
+    <ul class="nav-menu">
+        <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+        <li><a href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
+        <li><a href="contact.html"><i class="fas fa-envelope"></i> Contact</a></li>
+        <li><a href="login.html"><i class="fas fa-sign-in-alt"></i> Sign In</a></li>
+        <li><a href="cart.html"><i class="fas fa-shopping-cart"></i> Book Cart</a></li>
+        <li><a href="wishlist.html"><i class="fas fa-heart"></i> Reading List</a></li>
+    </ul>
+    <hr>
+    <h4>Book Categories</h4>
+    <ul class="spare-parts-menu"><li><i class="fas fa-leaf"></i> Biology</li><li><i class="fas fa-flask"></i> Chemistry</li><li><i class="fas fa-atom"></i> Physics</li><li><i class="fas fa-language"></i> Arabic</li><li><i class="fas fa-square-root-alt"></i> Mathematics</li><li><i class="fas fa-laptop-code"></i> Computer Science &amp; IT</li><li><i class="fas fa-shield-alt"></i> Cybersecurity</li><li><i class="fas fa-book-open"></i> Business &amp; Humanities</li></ul>
+</aside>
+
+<!-- HERO SECTION -->
+<section class="hero-contact">
+    <div class="hero-content">
+        <h2>Get in Touch</h2>
+        <p>We'd love to hear from you. Contact us today!</p>
+    </div>
+</section>
+
+<!-- CONTACT CONTENT -->
+<main class="contact-container">
+    
+    <!-- Contact Info Cards -->
+    <section class="contact-info">
+        <div class="info-card">
+            <div class="info-icon">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <h3>Visit Us</h3>
+            <p>Mombasa, Kenya</p>
+            <p>Showroom & Service Center</p>
+        </div>
+
+        <div class="info-card">
+            <div class="info-icon">
+                <i class="fas fa-phone"></i>
+            </div>
+            <h3>Call Us</h3>
+            <p>+254 700 123 456</p>
+            <p>+254 700 654 321</p>
+        </div>
+
+        <div class="info-card">
+            <div class="info-icon">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <h3>Email Us</h3>
+            <p>calxinkenya147@gmail.com</p>
+            <p>support@calxinbooks.com</p>
+        </div>
+
+        <div class="info-card">
+            <div class="info-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3>Business Hours</h3>
+            <p>Mon - Fri: 8:00 AM - 6:00 PM</p>
+            <p>Sat - Sun: 9:00 AM - 4:00 PM</p>
+        </div>
+    </section>
+
+    <!-- Contact Form Section -->
+    <section class="contact-form-section">
+        <div class="form-container">
+            <h2>Send us a Message or Place an Order</h2>
+            <form id="contactForm">
+                <div class="form-group">
+                    <label for="messageType">What would you like to do? *</label>
+                    <select id="messageType" name="messageType" required onchange="toggleOrderFields()">
+                        <option value="">-- Select an option --</option>
+                        <option value="inquiry">Send a Message/Inquiry</option>
+                        <option value="order">Place an Order</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Full Name *</label>
+                    <input type="text" id="name" name="name" placeholder="e.g., John Mwale" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" name="email" placeholder="e.g., john@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number *</label>
+                    <input type="tel" id="phone" name="phone" placeholder="e.g., +254 700 123 456" required>
+                </div>
+
+                <!-- Order Fields (Hidden by default) -->
+                <div id="orderFields" class="order-fields" style="display: none;">
+                    <div class="form-group">
+                        <label for="bookType">Book Type/Model *</label>
+                        <input type="text" id="bookType" name="bookType" placeholder="e.g., Toyota Land Cruiser, BMW X5">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="spareParts">Book Categories *</label>
+                        <select id="spareParts" name="spareParts" multiple size="6">
+                            <option value="Engine Parts">Computer Science</option>
+                            <option value="Brake System">Brake System (Pads, Rotors, Calipers)</option>
+                            <option value="Suspension">Suspension (Springs, Shocks, Bearings)</option>
+                            <option value="Tire & Wheels">Tires & Wheels (New/Used, All Sizes)</option>
+                            <option value="Electrical">Electrical (Alternators, Starters, Batteries)</option>
+                            <option value="Cooling System">Cooling System (Radiators, Water Pumps)</option>
+                            <option value="Transmission">Transmission Parts (Gearbox, Torque Converter)</option>
+                            <option value="Interior Trim">Interior Trim & Accessories</option>
+                            <option value="Audio & Navigation">Audio & Navigation Systems</option>
+                            <option value="Lights">Headlights, Taillights & Fixtures</option>
+                            <option value="Paint & Body">Paint & Body Repair Materials</option>
+                            <option value="Performance Parts">Performance & Tuning Parts</option>
+                        </select>
+                        <small style="color: #999; display: block; margin-top: 5px;">Hold Ctrl/Cmd to select multiple parts</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quantity">Quantity *</label>
+                        <input type="number" id="quantity" name="quantity" min="1" value="1" placeholder="e.g., 1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="budget">Budget Range (KES) *</label>
+                        <input type="text" id="budget" name="budget" placeholder="e.g., 2,000,000 - 5,000,000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="deliveryDate">Preferred Delivery Date</label>
+                        <input type="date" id="deliveryDate" name="deliveryDate" placeholder="Select a date">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="features">Special Features/Requirements</label>
+                        <textarea id="features" name="features" rows="3" placeholder="e.g., Book title, author, ISBN, or category"></textarea>
+                    </div>
+                </div>
+
+                <!-- General Fields -->
+                <div class="form-group" id="subjectGroup">
+                    <label for="subject">Subject *</label>
+                    <input type="text" id="subject" name="subject" placeholder="e.g., Inquiry about book warranty" required>
+                </div>
+
+                <div class="form-group" id="messageGroup">
+                    <label for="message">Message *</label>
+                    <textarea id="message" name="message" rows="6" placeholder="Please describe your inquiry or question in detail..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+            <div id="formMessage" class="form-message"></div>
+        </div>
+
+        <!-- Map Section -->
+        <div class="map-container">
+            <h2>Find Us on Map</h2>
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3979.745149449988!2d39.66387!3d-4.043477!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x184055e8d7b6e6f3%3A0x1234567890abcdef!2sMombasa%2C%20Kenya!5e0!3m2!1sen!2ske!4v1234567890" width="100%" height="400" style="border:0; border-radius: 8px;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq-container">
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <h4>What are your payment options?</h4>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>We accept cash, bank transfers, mobile money (M-Pesa), and installment plans. Our team will help you choose the best option for your purchase.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <h4>Do you offer financing options?</h4>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes! We partner with leading financial institutions to offer flexible financing options with competitive interest rates and flexible payment terms.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <h4>What warranty do you provide?</h4>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>All our books come with a comprehensive warranty covering major mechanical issues for up to 2 years or based on mileage, whichever comes first.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <h4>Can I test drive a book?</h4>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Absolutely! We encourage all customers to test drive any book before purchasing. Just visit our showroom or call us to schedule a test drive.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <h4>Do you accept trade-ins?</h4>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes, we accept trade-ins! We'll evaluate your current book and provide a competitive offer to apply towards your new purchase.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <h4>About Us</h4>
+            <p>Reader’s Corner is your trusted partner in books and learning resources since 2020.</p>
+        </div>
+        <div class="footer-section">
+            <h4>Quick Links</h4>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="About.html">About</a></li>
+                <li><a href="Contact.html">Contact</a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <h4>Contact Info</h4>
+            <p>Email: calxinkenya147@gmail.com</p>
+            <p>Phone: +254 700 123 456</p>
+            <p>Location: Mombasa, Kenya</p>
+        </div>
+        <div class="footer-section">
+            <h4>Designed By</h4>
+            <p>Purice Mwero - <a href="mailto:puricekaka@gmail.com" style="color: #a8d8ff; text-decoration: none;">puricekaka@gmail.com</a></p>
+            <p>Hiram Ngatia - <a href="mailto:hiracharagu@gmail.com" style="color: #a8d8ff; text-decoration: none;">hiracharagu@gmail.com</a></p>
+            <p>Purine Mwero - <a href="mailto:designerpurine@gmail.com" style="color: #a8d8ff; text-decoration: none;">designerpurine@gmail.com</a></p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; 2026 Reader’s Corner. All rights reserved.</p>
+        <p>Designed by Purice</p>
+    </div>
+</footer>
+
+</body>
+</html>
+
+
+
+
+

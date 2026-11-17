@@ -1,0 +1,190 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Details - Reader’s Corner</title>
+    <script type="module" src="supabase-client.js"></script>
+    <script type="module" src="supabase-repository.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <link rel="stylesheet" href="project.css">
+    <link rel="stylesheet" href="product-view.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="index.html"><h1>Reader’s Corner</h1></a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="cart.html">Book Cart</a>
+                <a href="wishlist.html">Reading List</a>
+            </div>
+            <div class="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Side Menu -->
+    <aside class="side-menu" id="sideMenu">
+        <h3><i class="fas fa-bars"></i> Menu</h3>
+        <ul class="nav-menu">
+            <li><a href="index.html" onclick="closeMenu()"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="about.html" onclick="closeMenu()"><i class="fas fa-info-circle"></i> About</a></li>
+            <li><a href="contact.html" onclick="closeMenu()"><i class="fas fa-envelope"></i> Contact</a></li>
+            <li><a href="login.html" onclick="closeMenu()"><i class="fas fa-sign-in-alt"></i> Sign In</a></li>
+            <li><a href="cart.html" onclick="closeMenu()"><i class="fas fa-shopping-cart"></i> Book Cart</a></li>
+            <li><a href="wishlist.html" onclick="closeMenu()"><i class="fas fa-heart"></i> Reading List</a></li>
+        </ul>
+        <hr>
+        <h4>Book Categories</h4>
+        <ul class="spare-parts-menu"><li><i class="fas fa-leaf"></i> Biology</li><li><i class="fas fa-flask"></i> Chemistry</li><li><i class="fas fa-atom"></i> Physics</li><li><i class="fas fa-language"></i> Arabic</li><li><i class="fas fa-square-root-alt"></i> Mathematics</li><li><i class="fas fa-laptop-code"></i> Computer Science &amp; IT</li><li><i class="fas fa-shield-alt"></i> Cybersecurity</li><li><i class="fas fa-book-open"></i> Business &amp; Humanities</li></ul>
+    </aside>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="index.html">Home</a> / 
+        <span id="breadcrumbName">Book</span>
+    </div>
+
+    <div class="container">
+        <div class="product-container">
+            <!-- Book Image Section -->
+            <div class="product-image-section">
+                <div class="main-image">
+                    <img id="mainImage" src="" alt="Book">
+                </div>
+            </div>
+
+            <!-- Book Details Section -->
+            <div class="product-details-section">
+                <h1 id="productName">Book Title</h1>
+                <p class="category" id="productCategory">Category</p>
+                
+                <div class="rating-section">
+                    <p class="rating" id="productRating">★ 4.5</p>
+                    <p class="stock" id="productStock">20 in Stock</p>
+                </div>
+
+                <div class="price-section">
+                    <h2 id="productPrice" class="price">KES 0</h2>
+                    <p class="original-price" id="originalPrice"></p>
+                </div>
+
+                <div class="description-section">
+                    <h3>Book Details</h3>
+                    <div class="specs">
+                        <div class="spec-item">
+                            <span class="spec-label">Author:</span>
+                            <span id="specAuthor" class="spec-value">-</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">ISBN:</span>
+                            <span id="specIsbn" class="spec-value">-</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Publisher:</span>
+                            <span id="specPublisher" class="spec-value">-</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="spec-label">Published:</span>
+                            <span id="specYear" class="spec-value">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-section">
+                    <div class="quantity-selector">
+                        <label for="quantity">Quantity:</label>
+                        <div class="quantity-input">
+                            <button onclick="decreaseQuantity()">-</button>
+                            <input type="number" id="quantity" value="1" min="1" readonly>
+                            <button onclick="increaseQuantity()">+</button>
+                        </div>
+                    </div>
+
+                    <button class="btn-add-cart" onclick="addBookToCart()">
+                        <i class="fas fa-shopping-cart"></i> Add to Book Cart
+                    </button>
+                    <button class="btn-wishlist" id="wishlistBtn" onclick="toggleWishlist()">
+                        <i class="far fa-heart"></i> <span id="wishlistText">Add to Reading List</span>
+                    </button>
+                </div>
+
+                <div class="info-section">
+                    <p><i class="fas fa-truck"></i> <strong>Free Delivery</strong> on orders over KES 50,000</p>
+                    <p><i class="fas fa-shield-alt"></i> <strong>Carefully selected books</strong> - Quality books for every reader</p>
+                    <p><i class="fas fa-undo"></i> <strong>7 Days Return</strong> - No questions asked</p>
+                </div>
+            </div>
+        </div>
+
+        <section class="reviews-section" aria-labelledby="reviewsTitle">
+            <h2 id="reviewsTitle">Customer Reviews</h2>
+            <form id="reviewForm" onsubmit="submitBookReview(event)">
+                <label for="reviewRating">Your rating</label>
+                <select id="reviewRating" required><option value="">Select a rating</option><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select>
+                <label for="reviewBody">Your review</label>
+                <textarea id="reviewBody" rows="4" maxlength="5000" required></textarea>
+                <button type="submit">Submit review</button>
+            </form>
+            <div id="productReviews" aria-live="polite">Loading reviews…</div>
+        </section>
+
+        <!-- Related Books -->
+        <div class="related-section">
+            <h2>Related Books in <span id="relatedCategory"></span></h2>
+            <div class="related-products" id="relatedBooks">
+                <!-- Related products will load here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>About Us</h4>
+                <p>Reader’s Corner is your trusted partner in books and learning resources since 2020.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Contact Info</h4>
+                <p>Email: calxinkenya147@gmail.com</p>
+                <p>Phone: +254 700 123 456</p>
+                <p>Location: Mombasa, Kenya</p>
+            </div>
+            <div class="footer-section">
+                <h4>Designed By</h4>
+                <p>Purice Mwero - <a href="mailto:puricekaka@gmail.com" style="color: #a8d8ff; text-decoration: none;">puricekaka@gmail.com</a></p>
+                <p>Hiram Ngatia - <a href="mailto:hiracharagu@gmail.com" style="color: #a8d8ff; text-decoration: none;">hiracharagu@gmail.com</a></p>
+                <p>Purine Mwero - <a href="mailto:designerpurine@gmail.com" style="color: #a8d8ff; text-decoration: none;">designerpurine@gmail.com</a></p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Reader’s Corner. All rights reserved.</p>
+            <p>Designed by Purice</p>
+        </div>
+    </footer>
+    <script src="product-view.js"></script>
+</body>
+</html>
+
+
+
+
+

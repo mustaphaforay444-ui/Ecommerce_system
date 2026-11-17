@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Orders - Reader’s Corner</title>
+  <script type="module" src="supabase-client.js"></script>
+  <script type="module" src="supabase-repository.js"></script>
+  <link rel="stylesheet" href="project.css">
+  <style>
+    .orders-page{max-width:1050px;margin:2rem auto;padding:1rem}.order-card{background:#fff;border-radius:12px;padding:1.25rem;margin:1rem 0;box-shadow:0 3px 16px #0001}.order-head{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}.order-lines{padding-left:1.25rem}.order-status{font-weight:700;color:#087fbd;text-transform:capitalize}.orders-message{padding:1.25rem;background:#eef7fc;border-radius:8px}
+  </style>
+</head>
+<body>
+  <header class="header"><div class="header-content"><a class="logo" href="index.html">Reader’s Corner</a><nav><a href="index.html">Home</a><a href="cart.html">Book Cart</a><a href="wishlist.html">Reading List</a></nav></div></header>
+  <main class="orders-page"><h1>My Orders</h1><p class="orders-message" id="ordersMessage" role="status">Loading your orders…</p><div id="ordersList"></div></main>
+  <script src="orders.js" defer></script>
+</body>
+</html>

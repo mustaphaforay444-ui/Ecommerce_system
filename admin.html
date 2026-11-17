@@ -1,0 +1,253 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Reader’s Corner</title>
+    <script type="module" src="supabase-client.js"></script>
+    <script type="module" src="supabase-repository.js"></script>
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+</head>
+<body class="admin-auth-checking">
+
+<div class="admin-container">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <div class="admin-header">
+            <h2><i class="fas fa-tachometer-alt"></i> Admin Panel</h2>
+        </div>
+        <nav class="admin-nav">
+            <a href="#" class="nav-item active" onclick="showSection('dashboard', this); return false;">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('products', this); return false;">
+                <i class="fas fa-cube"></i> Manage Books
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('orders', this); return false;">
+                <i class="fas fa-shopping-bag"></i> Manage Orders
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('buyers', this); return false;">
+                <i class="fas fa-users"></i> All Buyers
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('sales', this); return false;">
+                <i class="fas fa-chart-bar"></i> Sales Report
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('reviews', this); return false;">
+                <i class="fas fa-star"></i> Reviews
+            </a>
+            <a href="index.html" class="nav-item logout">
+                <i class="fas fa-sign-out-alt"></i> Back to Site
+            </a>
+            <a href="admin-login.html" class="nav-item logout" onclick="logoutAdmin(event)">
+                <i class="fas fa-lock"></i> Admin Sign Out
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-content">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active">
+            <div class="section-header">
+                <h1>Dashboard</h1>
+            </div>
+            <p class="admin-help-note">Dashboard totals show records currently stored in the connected bookstore database.</p>
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-cube"></i></div>
+                    <div class="stat-info">
+                        <h3>Total Books</h3>
+                        <p id="totalBooks">…</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-info">
+                        <h3>Total Buyers</h3>
+                        <p id="totalBuyers">…</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+                    <div class="stat-info">
+                        <h3>Total Orders</h3>
+                        <p id="totalOrders">…</p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Books Management Section -->
+        <section id="products" class="section">
+            <div class="section-header">
+                <h1>Manage Books</h1>
+                <button class="btn btn-primary" onclick="showAddBookForm()">
+                    <i class="fas fa-plus"></i> Add New Book
+                </button>
+            </div>
+
+            <!-- Add/Edit Book Form -->
+            <div id="productForm" class="form-container" style="display: none;">
+                <h2>Add/Edit Book</h2>
+                <form onsubmit="saveBook(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Book Title *</label>
+                            <input type="text" id="productName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Price (KES) *</label>
+                            <input type="number" id="productPrice" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="productCategory" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Stock Quantity *</label>
+                            <input type="number" id="productStock" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Cover image URL</label>
+                        <input type="text" id="productImage" placeholder="Optional public image URL">
+                        <input type="file" id="productCoverFile" accept="image/*" aria-label="Upload book cover">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="productDescription" rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Author</label><input type="text" id="productAuthor"></div>
+                        <div class="form-group"><label>ISBN</label><input type="text" id="productIsbn"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Publisher</label><input type="text" id="productPublisher"></div>
+                        <div class="form-group"><label>Publication year</label><input type="number" id="productYear" min="0"></div>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-success">Save Book</button>
+                        <button type="button" class="btn btn-secondary" onclick="hideAddBookForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <div class="section-header"><h2>Book Categories</h2><button class="btn btn-primary" type="button" onclick="showCategoryForm()">Add Category</button></div>
+                <form id="categoryForm" class="admin-category-form" onsubmit="saveCategory(event)" hidden>
+                    <input id="categoryName" required maxlength="80" placeholder="Category name">
+                    <input id="categorySlug" maxlength="80" placeholder="category-slug">
+                    <input id="categorySort" type="number" min="0" value="0" aria-label="Display order">
+                    <button type="submit" class="btn btn-success">Save Category</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideCategoryForm()">Cancel</button>
+                </form>
+                <table><thead><tr><th>Category</th><th>Slug</th><th>Order</th><th>Status</th><th>Actions</th></tr></thead><tbody id="categoriesTableBody"><tr><td colspan="5">Loading categories…</td></tr></tbody></table>
+            </div>
+
+            <!-- Books List -->
+            <div class="table-container">
+                <table id="productsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Price (KES)</th>
+                            <th>Stock</th>
+                            <th>Rating</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Orders Management Section -->
+        <section id="orders" class="section">
+            <div class="section-header">
+                <h1>Manage Orders</h1>
+            </div>
+            <div class="table-container">
+                <table id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Delivery Location</th>
+                            <th>Items</th>
+                            <th>Total (KES)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Buyers -->
+        <section id="buyers" class="section">
+            <div class="section-header">
+                <h1>All Buyers</h1>
+            </div>
+            <p class="admin-help-note">Buyer records and delivery locations come from the connected customer and order records.</p>
+            <div class="table-container">
+                <table id="buyersTable">
+                    <thead>
+                        <tr>
+                            <th>Buyer</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Orders</th>
+                            <th>Last Order</th>
+                            <th>Delivery Location</th>
+                        </tr>
+                    </thead>
+                    <tbody id="buyersTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="sales" class="section">
+            <div class="section-header"><h1>Verified Sales Report</h1></div>
+            <p class="admin-help-note">Only payments verified by a payment provider appear here.</p>
+            <div class="table-container"><table><thead><tr><th>Date</th><th>Verified payments</th><th>Revenue (KES)</th></tr></thead><tbody id="salesTableBody"><tr><td colspan="3">Loading verified sales…</td></tr></tbody></table></div>
+        </section>
+
+        <section id="reviews" class="section">
+            <div class="section-header"><h1>Customer Reviews</h1></div>
+            <div class="table-container"><table><thead><tr><th>Book</th><th>Reader</th><th>Rating</th><th>Review</th><th>Status</th><th>Actions</th></tr></thead><tbody id="reviewsTableBody"><tr><td colspan="6">Loading reviews…</td></tr></tbody></table></div>
+        </section>
+    </main>
+
+    <dialog class="buyer-location-dialog" id="buyerLocationDialog" aria-labelledby="buyerLocationTitle">
+        <div class="buyer-location-dialog-content">
+            <h2 id="buyerLocationTitle">Buyer delivery location</h2>
+            <p class="buyer-location-name" id="buyerLocationName"></p>
+            <p class="buyer-location-address" id="buyerLocationAddress"></p>
+            <p class="buyer-location-order" id="buyerLocationOrder"></p>
+            <button class="btn btn-primary" type="button" onclick="closeBuyerLocation()">Close</button>
+        </div>
+    </dialog>
+
+    <!-- Admin Footer -->
+    <footer class="admin-footer">
+        <p>&copy; 2026 Reader’s Corner Admin Panel</p>
+        <p>Designed by Purice Mwero, Hiram Ngatia, and Purine Mwero</p>
+    </footer>
+</div>
+<script type="module" src="admin-guard.js"></script>
+<script src="admin.js" defer></script>
+</body>
+</html>
+
+
+

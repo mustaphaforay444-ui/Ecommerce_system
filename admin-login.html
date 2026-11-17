@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Sign In - Reader’s Corner</title>
+    <script type="module" src="supabase-client.js"></script>
+    <script type="module" src="supabase-repository.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { color: #243447; }
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 24px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #0752a0, #00a6df);
+            color: #243447;
+            font-family: Arial, sans-serif;
+        }
+        .admin-login-card {
+            width: min(100%, 440px);
+            padding: 34px;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 18px 48px rgba(0, 31, 74, .24);
+        }
+        .admin-login-icon { color: #0785c5; font-size: 2rem; }
+        h1 { margin: 12px 0 8px; font-size: 1.7rem; }
+        .intro, .security-note { color: #5b6875; line-height: 1.5; }
+        .field { margin: 18px 0; }
+        label { display: block; margin-bottom: 7px; font-weight: 700; }
+        input {
+            width: 100%;
+            padding: 12px 13px;
+            border: 1px solid #cbd5df;
+            border-radius: 8px;
+            font: inherit;
+        }
+        input:focus { outline: 2px solid #1496d4; border-color: transparent; }
+        .password-control { position: relative; }
+        .password-control input { padding-right: 52px; }
+        button {
+            width: 100%;
+            margin-top: 8px;
+            padding: 13px;
+            border: 0;
+            border-radius: 8px;
+            background: #087fbd;
+            color: #fff;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        button:hover { background: #066ba0; }
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 7px;
+            width: 36px;
+            height: 36px;
+            margin: 0;
+            padding: 0;
+            transform: translateY(-50%);
+            border: 0;
+            background: transparent;
+            color: #25536d;
+        }
+        .password-toggle:hover { background: #eaf4fa; border-radius: 6px; }
+        .message { min-height: 22px; margin: 12px 0 0; color: #b42318; }
+        .security-note { margin: 20px 0 0; font-size: .82rem; }
+        .back-link { display: inline-block; margin-top: 18px; color: #087fbd; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <main class="admin-login-card">
+        <i class="admin-login-icon fas fa-lock" aria-hidden="true"></i>
+        <h1>Admin sign in</h1>
+        <p class="intro">Enter your admin username or email and password to open the admin portal.</p>
+        <form id="adminLoginForm">
+            <div class="field">
+                <label for="adminIdentifier">Username or email</label>
+                <input id="adminIdentifier" name="username" autocomplete="username" required>
+            </div>
+            <div class="field">
+                <label for="adminPassword">Password</label>
+                <div class="password-control">
+                    <input id="adminPassword" name="password" type="password" autocomplete="current-password" required>
+                    <button class="password-toggle" type="button" id="toggleAdminPassword" aria-label="Show password" aria-pressed="false" title="Show password" onclick="toggleAdminPasswordVisibility()"><i class="fas fa-eye" aria-hidden="true"></i></button>
+                </div>
+            </div>
+            <button type="submit">Sign in</button>
+            <p class="message" id="formMessage" role="alert" aria-live="polite"></p>
+        </form>
+        <p class="security-note">Admin registration is disabled. If you do not have admin credentials, contact the site owner.</p>
+        <a class="back-link" href="index.html">Back to bookstore</a>
+    </main>
+    <script>
+        const form = document.getElementById('adminLoginForm');
+        const message = document.getElementById('formMessage');
+
+        function toggleAdminPasswordVisibility() {
+            const passwordInput = document.getElementById('adminPassword');
+            const toggle = document.getElementById('toggleAdminPassword');
+            const showing = passwordInput.type === 'password';
+            passwordInput.type = showing ? 'text' : 'password';
+            toggle.setAttribute('aria-label', showing ? 'Hide password' : 'Show password');
+            toggle.setAttribute('title', showing ? 'Hide password' : 'Show password');
+            toggle.setAttribute('aria-pressed', String(showing));
+            toggle.innerHTML = `<i class="fas fa-eye${showing ? '-slash' : ''}" aria-hidden="true"></i>`;
+        }
+
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            message.textContent = '';
+            const identifier = document.getElementById('adminIdentifier').value.trim();
+            const password = document.getElementById('adminPassword').value;
+
+            try {
+                if (!window.bookStore) throw new Error('The authentication service is not available.');
+                await window.supabaseReady;
+                await window.bookStore.signInAdmin(identifier, password);
+                window.location.href = 'admin.html';
+            } catch (error) {
+                message.textContent = error.message || 'The username/email or password is incorrect.';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+node_modules/
+dist/
+public/
+calxin.images/
+.vercel/
+.env
+.env.*
+!.env.example
+supabase/.temp/
+*.log
+
+.vercel
+.env*
