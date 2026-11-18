@@ -29,7 +29,18 @@ async function initializePortal() {
 }
 
 function bindPortalNavigation() {
-  document.querySelectorAll('[data-view],[data-open]').forEach(button => button.addEventListener('click', () => showPortalView(button.dataset.view || button.dataset.open)));
+  const layout = document.querySelector('.portal-layout');
+  const menuToggle = document.getElementById('portalMenuToggle');
+  const closeMenu = () => { layout?.classList.remove('menu-open'); menuToggle?.setAttribute('aria-expanded', 'false'); };
+  menuToggle?.addEventListener('click', () => {
+    const open = layout.classList.toggle('menu-open');
+    menuToggle.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
+  document.querySelectorAll('[data-view],[data-open]').forEach(button => button.addEventListener('click', () => {
+    showPortalView(button.dataset.view || button.dataset.open);
+    closeMenu();
+  }));
   document.getElementById('signOut').addEventListener('click', async event => {
     event.preventDefault();
     try { await window.bookStore.signOut(); location.href = 'index.html'; }
@@ -51,6 +62,8 @@ function bindPortalNavigation() {
 function showPortalView(view) {
   document.querySelectorAll('.portal-view').forEach(panel => panel.classList.toggle('active', panel.id === `view-${view}`));
   document.querySelectorAll('.portal-nav-link').forEach(button => button.classList.toggle('active', button.dataset.view === view));
+  const heading = document.querySelector(`#view-${view} h1`);
+  if (heading) document.title = `${heading.textContent} - Reader’s Corner`;
   if (view === 'messages') loadCustomerMessages();
   if (view === 'orders' || view === 'cart' || view === 'reading') {
     const frame = document.querySelector(`#view-${view} iframe`);

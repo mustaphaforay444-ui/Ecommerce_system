@@ -9,7 +9,7 @@ let adminOrdersChannel = null;
 let adminMessagesChannel = null;
 let sellerApplications = [];
 
-function initializeAdminAfterAuthorization() {
+async function initializeAdminAfterAuthorization() {
     document.getElementById('categoryName')?.addEventListener('input', event => {
         if (editingCategoryId) return;
         document.getElementById('categorySlug').value = event.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');

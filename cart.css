@@ -915,6 +915,13 @@ html {
     transition: none !important;
 }
 
+html.portal-embedded .navbar,
+html.portal-embedded .side-menu,
+html.portal-embedded .breadcrumb,
+html.portal-embedded .footer { display: none !important; }
+html.portal-embedded body { padding-top: 0 !important; background: #fff; }
+html.portal-embedded .container { width: 100%; max-width: 100%; margin: 0 auto; padding: 12px; }
+
 .cart-item:hover,
 .remove-btn:hover,
 .btn-checkout:hover,
