@@ -5,7 +5,7 @@
   <title>Seller Sign In - Reader’s Corner</title>
   <script type="module" src="supabase-client.js"></script><script type="module" src="supabase-repository.js"></script>
   <style>
-    *{box-sizing:border-box}body{min-height:100vh;margin:0;padding:20px;display:grid;place-items:center;background:linear-gradient(135deg,#0752a0,#00a6df);font:16px Arial,sans-serif;color:#243447}.card{width:min(100%,440px);padding:34px;border-radius:16px;background:#fff;box-shadow:0 18px 48px #001f4a3d}h1{margin:0 0 8px}p{line-height:1.5;color:#5b6875}label{display:block;margin:18px 0 7px;font-weight:700}input{width:100%;padding:12px;border:1px solid #cbd5df;border-radius:8px;font:inherit}.password-wrap{position:relative}.password-wrap input{padding-right:58px}.password-toggle{position:absolute;right:7px;top:50%;width:auto;margin:0;padding:7px 9px;transform:translateY(-50%);border:0;border-radius:6px;background:#eef7fc;color:#17456b;font:inherit;font-size:.85rem}button{width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#087fbd;color:white;font:inherit;font-weight:700;cursor:pointer}.error{color:#b42318;min-height:22px}a{color:#087fbd}
+    *{box-sizing:border-box}body{min-height:100vh;margin:0;padding:20px;display:grid;place-items:center;background:linear-gradient(135deg,#0752a0,#00a6df);font:16px Arial,sans-serif;color:#243447}.card{width:min(100%,440px);padding:34px;border-radius:16px;background:#fff;box-shadow:0 18px 48px #001f4a3d}h1{margin:0 0 8px}p{line-height:1.5;color:#5b6875}label{display:block;margin:18px 0 7px;font-weight:700}input{width:100%;padding:12px;border:1px solid #cbd5df;border-radius:8px;font:inherit}.password-wrap{position:relative}.password-wrap input{padding-right:58px}.password-toggle{position:absolute;right:7px;top:50%;width:auto;margin:0;padding:7px 9px;transform:translateY(-50%);border:0;border-radius:6px;background:#eef7fc;color:#17456b;font:inherit;font-size:.85rem}button{width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#087fbd;color:white;font:inherit;font-weight:700;cursor:pointer}button:disabled{opacity:.65;cursor:wait}.error{color:#b42318;min-height:22px}a{color:#087fbd}.create-account{display:block;margin:12px 0 18px;padding:13px;border:1px solid #087fbd;border-radius:8px;text-align:center;text-decoration:none;font-weight:700}.create-account:hover{background:#eef8fc}
   </style>
 </head>
 <body><main class="card">
@@ -13,7 +13,7 @@
   <form id="sellerLoginForm"><label for="email">Seller email</label><input id="email" type="email" autocomplete="username" required>
     <label for="password">Password</label><div class="password-wrap"><input id="password" type="password" autocomplete="current-password" required><button class="password-toggle" type="button" id="toggleSellerPassword" aria-label="Show password" aria-pressed="false">Show</button></div>
     <button type="submit">Sign in</button><p id="message" class="error" role="alert" aria-live="polite"></p>
-  </form><a href="seller-register.html">Apply for a seller account</a><br><a href="index.html">Back to bookstore</a>
+  </form><a class="create-account" href="seller-register.html">Create Seller Account</a><a href="index.html">Back to bookstore</a>
 </main>
 <script>
   const status = new URLSearchParams(location.search).get('status');
